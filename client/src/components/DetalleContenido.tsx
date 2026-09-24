@@ -48,11 +48,11 @@ export default function DetalleContenido({ id }: { id: string }) {
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nacimiento</dt>
-              <dd className="mt-0.5 text-slate-900">{soloFecha(persona.fecha_nacimiento)}</dd>
+              <dd className="mt-0.5 text-sm text-slate-900">{soloFecha(persona.fecha_nacimiento)}</dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Edad</dt>
-              <dd className="mt-0.5 text-slate-900">{persona.edad ?? '—'}</dd>
+              <dd className="mt-0.5 text-sm text-slate-900">{persona.edad ?? '—'}</dd>
             </div>
           </dl>
         </div>

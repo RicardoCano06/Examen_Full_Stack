@@ -236,8 +236,8 @@ export default function PersonasList() {
                 </span>
               </td>
               <td className="px-4 py-2 text-sm text-slate-600">{puntosMiles(p.nro_documento)}</td>
-              <td className="px-4 py-2 text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
-              <td className="px-4 py-2 text-slate-600">{p.edad ?? '—'}</td>
+              <td className="px-4 py-2 text-sm text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
+              <td className="px-4 py-2 text-sm text-slate-600">{p.edad ?? '—'}</td>
               <td className="px-4 py-2">
                 <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'slate'}>
                   {p.ruta_foto_frente && p.ruta_foto_dorso ? 'OK' : '—'}

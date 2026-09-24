@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { listarAuditoria, type RegistroAuditoria } from '../api/client';
-import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
@@ -8,6 +7,7 @@ import FechaInput from '../components/FechaInput';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
+import StatusDot from '../components/StatusDot';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
@@ -40,7 +40,7 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
-const HEADERS = ['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram', { label: 'Detalle', center: true }];
+const HEADERS = ['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram'];
 
 export default function Auditoria() {
   const toast = useToast();
@@ -119,21 +119,26 @@ export default function Auditoria() {
       ) : (
         <Table headers={HEADERS}>
           {filas.map((a) => (
-            <tr key={a.id} className="transition-colors hover:bg-slate-50/70">
+            <tr
+              key={a.id}
+              onClick={() => {
+                // No abrir si el usuario solo seleccionaba texto para copiar.
+                if (window.getSelection()?.toString()) return;
+                setDetalle(a);
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') setDetalle(a); }}
+              tabIndex={0}
+              className="cursor-pointer transition-colors hover:bg-slate-50 focus:outline-none focus:bg-slate-50"
+            >
               <td className="whitespace-nowrap px-4 py-2 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
-              <td className="px-4 py-2 font-mono text-[13px] font-semibold text-slate-900">{a.termino_buscado}</td>
-              <td className="px-4 py-2"><Badge tone="blue">{a.cantidad_resultados}</Badge></td>
-              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{a.ip_origen}</td>
+              <td className="px-4 py-2 text-sm font-semibold text-slate-900">{a.termino_buscado}</td>
+              <td className={`px-4 py-2 text-center text-sm ${a.cantidad_resultados === 0 ? 'text-slate-400' : 'font-medium text-slate-700'}`}>{a.cantidad_resultados}</td>
+              <td className="px-4 py-2 text-sm text-slate-600">{a.ip_origen}</td>
               <td className="px-4 py-2 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
               <td className="px-4 py-2">
-                <Badge tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
+                <StatusDot tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
                   {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
-                </Badge>
-              </td>
-              <td className="px-4 py-2 text-center">
-                <button className="text-sm font-medium text-slate-600 hover:text-slate-900" onClick={() => setDetalle(a)}>
-                  Ver
-                </button>
+                </StatusDot>
               </td>
             </tr>
           ))}
