@@ -34,9 +34,14 @@ export default function DetalleContenido({ id }: { id: string }) {
   return (
     <div>
       <Card className="mb-4 p-6">
-        <div className="flex items-center gap-4">
+        <div className="mb-4 flex items-center gap-4">
           <Avatar nombres={persona.nombres} apellidos={persona.apellidos} />
-          <dl className="grid flex-1 grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+          <div>
+            <p className="text-lg font-semibold text-slate-900">{persona.apellidos}, {persona.nombres}</p>
+          </div>
+        </div>
+        <div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Documento</dt>
               <dd className="mt-0.5 text-sm font-semibold text-slate-900">{puntosMiles(persona.nro_documento)}</dd>
@@ -48,10 +53,6 @@ export default function DetalleContenido({ id }: { id: string }) {
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Edad</dt>
               <dd className="mt-0.5 text-slate-900">{persona.edad ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Registro</dt>
-              <dd className="mt-0.5 font-mono text-[13px] text-slate-500">{persona.id.slice(0, 8)}…</dd>
             </div>
           </dl>
         </div>

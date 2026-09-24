@@ -225,7 +225,7 @@ export default function PersonasList() {
               <td className="px-4 py-2">
                 <span className="flex items-center gap-3">
                   <Avatar nombres={p.nombres} apellidos={p.apellidos} />
-                  <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
+                  <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.apellidos}, {p.nombres}</button></span>
                 </span>
               </td>
               <td className="px-4 py-2 text-sm text-slate-600">{puntosMiles(p.nro_documento)}</td>
