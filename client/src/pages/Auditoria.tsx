@@ -63,12 +63,12 @@ export default function Auditoria() {
         <Table headers={['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram']}>
           {filas.map((a) => (
             <tr key={a.id} className="transition-colors hover:bg-slate-50/70">
-              <td className="whitespace-nowrap px-4 py-3 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
-              <td className="px-4 py-3 font-mono text-[13px] text-slate-900">{a.termino_buscado}</td>
-              <td className="px-4 py-3"><Badge tone="blue">{a.cantidad_resultados}</Badge></td>
-              <td className="px-4 py-3 font-mono text-[13px] text-slate-600">{a.ip_origen}</td>
-              <td className="px-4 py-3 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
-              <td className="px-4 py-3">
+              <td className="whitespace-nowrap px-4 py-2 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
+              <td className="px-4 py-2 font-mono text-[13px] text-slate-900">{a.termino_buscado}</td>
+              <td className="px-4 py-2"><Badge tone="blue">{a.cantidad_resultados}</Badge></td>
+              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{a.ip_origen}</td>
+              <td className="px-4 py-2 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
+              <td className="px-4 py-2">
                 <Badge tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
                   {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
                 </Badge>

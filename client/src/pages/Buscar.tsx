@@ -116,7 +116,7 @@ export default function Buscar() {
             <EmptyState message="Sin resultados para ese término." />
           ) : (
             resultados.map((p) => (
-              <Link key={p.id} to={`/personas/${p.id}`} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-colors hover:ring-blue-300">
+              <Link key={p.id} to={`/personas/${p.id}`} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5 transition-colors hover:ring-slate-300">
                 <Avatar nombres={p.nombres} apellidos={p.apellidos} />
                 <span className="flex-1">
                   <span className="block text-sm font-medium text-slate-900">{p.nombres} {p.apellidos}</span>

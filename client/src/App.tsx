@@ -9,7 +9,7 @@ import Auditoria from './pages/Auditoria';
 
 export default function App() {
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-slate-100 font-sans antialiased text-slate-900">
       <Sidebar />
       <main className="flex-1 p-8 overflow-y-auto">
         <Routes>

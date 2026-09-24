@@ -4,8 +4,11 @@ import { eliminarPersona, listarPersonas, type Persona } from '../api/client';
 import Avatar from '../components/Avatar';
 import Button from '../components/Button';
 import Card from '../components/Card';
+import DetalleContenido from '../components/DetalleContenido';
+import EditarForm from '../components/EditarForm';
 import EmptyState from '../components/EmptyState';
 import Input from '../components/Input';
+import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
@@ -28,6 +31,8 @@ export default function PersonasList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [verId, setVerId] = useState<string | null>(null);
+  const [editarId, setEditarId] = useState<string | null>(null);
   const seq = useRef(0);
   const ultimoBuscado = useRef<string | null>(null);
 
@@ -111,19 +116,23 @@ export default function PersonasList() {
         <Table headers={['Persona', 'Documento', 'Nacimiento', 'Edad', 'Acciones']}>
           {personas.map((p) => (
             <tr key={p.id} className="transition-colors hover:bg-slate-50/70">
-              <td className="px-4 py-3">
+              <td className="px-4 py-2">
                 <span className="flex items-center gap-3">
                   <Avatar nombres={p.nombres} apellidos={p.apellidos} />
-                  <span className="font-medium text-slate-900"><Link className="hover:text-blue-700 hover:underline" to={`/personas/${p.id}`}>{p.nombres} {p.apellidos}</Link></span>
+                  <span className="font-medium text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
                 </span>
               </td>
-              <td className="px-4 py-3 font-mono text-[13px] text-slate-600">{p.nro_documento}</td>
-              <td className="px-4 py-3 text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
-              <td className="px-4 py-3 text-slate-600">{p.edad ?? '—'}</td>
-              <td className="px-4 py-3">
+              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{p.nro_documento}</td>
+              <td className="px-4 py-2 text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
+              <td className="px-4 py-2 text-slate-600">{p.edad ?? '—'}</td>
+              <td className="px-4 py-2">
                 <span className="flex gap-3 text-sm">
-                  <Link className="font-medium text-blue-600 hover:text-blue-800" to={`/personas/${p.id}`}>Ver</Link>
-                  <Link className="font-medium text-blue-600 hover:text-blue-800" to={`/editar/${p.id}`}>Editar</Link>
+                  <button className="font-medium text-slate-600 hover:text-slate-900" onClick={() => setVerId(p.id)}>
+                    Ver
+                  </button>
+                  <button className="font-medium text-slate-600 hover:text-slate-900" onClick={() => setEditarId(p.id)}>
+                    Editar
+                  </button>
                   <button className="font-medium text-red-600 hover:text-red-800" onClick={() => void onEliminar(p.id)}>
                     Eliminar
                   </button>
@@ -150,6 +159,22 @@ export default function PersonasList() {
           Siguiente
         </Button>
       </div>
+      {verId && (
+        <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
+          <DetalleContenido id={verId} />
+        </Modal>
+      )}
+      {editarId && (
+        <Modal title="Editar persona" onClose={() => setEditarId(null)} wide>
+          <EditarForm
+            id={editarId}
+            onSaved={() => {
+              setEditarId(null);
+              void cargar(page, search);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

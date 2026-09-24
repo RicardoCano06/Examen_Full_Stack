@@ -18,7 +18,7 @@ export function TableCardSkeleton({ headers, rows = 10, avatar = false }: { head
       {Array.from({ length: rows }).map((_, i) => (
         <tr key={i} className="animate-pulse" aria-hidden="true">
           {headers.map((h, j) => (
-            <td key={h} className="px-4 py-3">
+            <td key={h} className="px-4 py-2">
               {avatar && j === 0 ? (
                 <span className="flex items-center gap-3">
                   <span className="h-9 w-9 shrink-0 rounded-full bg-slate-200" />

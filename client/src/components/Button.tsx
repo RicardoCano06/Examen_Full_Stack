@@ -3,9 +3,9 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 type Variant = 'primary' | 'secondary' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-600',
-  secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400',
-  danger: 'bg-white text-red-600 border border-red-200 hover:bg-red-50 focus:ring-red-400',
+  primary: 'bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-900',
+  secondary: 'bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 focus:ring-slate-400',
+  danger: 'bg-white text-red-600 ring-1 ring-inset ring-red-200 hover:bg-red-50 focus:ring-red-400',
 };
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
