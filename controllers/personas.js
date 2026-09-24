@@ -31,6 +31,36 @@ function isFutureDateOnly(s) {
   return s > todayStr;
 }
 
+// Topes de longitud: la BD es varchar sin límite y multer ya acota el campo
+// a 64KB; estos topes de negocio evitan registros absurdos y respuestas pesadas.
+const MAX_NOMBRES = 100;
+const MAX_APELLIDOS = 100;
+const MAX_DOCUMENTO = 20;
+
+function validarTextoPersona({ nombres, apellidos, nro_documento, fecha_nacimiento }) {
+  if (!nombres || !apellidos || !nro_documento || !fecha_nacimiento) {
+    throw httpError(400, 'Faltan datos obligatorios: nombres, apellidos, documento y fecha de nacimiento');
+  }
+  if (nombres.length > MAX_NOMBRES || apellidos.length > MAX_APELLIDOS) {
+    throw httpError(400, 'Nombres y apellidos deben tener como máximo 100 caracteres');
+  }
+  if (nro_documento.length > MAX_DOCUMENTO) {
+    throw httpError(400, 'El número de documento debe tener como máximo 20 caracteres');
+  }
+  if (!isValidDateOnly(fecha_nacimiento)) {
+    throw httpError(400, 'Fecha de nacimiento inválida (use YYYY-MM-DD)');
+  }
+  if (isFutureDateOnly(fecha_nacimiento)) {
+    throw httpError(400, 'Fecha de nacimiento no puede ser futura');
+  }
+}
+
+function validarUuid(id) {
+  if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(id || ''))) {
+    throw httpError(400, 'Identificador inválido');
+  }
+}
+
 // Resuelve una ruta guardada en BD a absoluta, contenida en UPLOADS_DIR.
 // Retorna null si es inválida (no se borra nada en ese caso).
 function resolveUploadPath(rutaRelativa) {
@@ -52,15 +82,7 @@ async function create(req, res, next) {
     const nro_documento = pick(req.body, 'nro_documento', 'documento');
     const fecha_nacimiento = pick(req.body, 'fecha_nacimiento', 'fechaNacimiento');
 
-    if (!nombres || !apellidos || !nro_documento || !fecha_nacimiento) {
-      throw httpError(400, 'Faltan datos obligatorios: nombres, apellidos, documento y fecha de nacimiento');
-    }
-    if (!isValidDateOnly(fecha_nacimiento)) {
-      throw httpError(400, 'Fecha de nacimiento inválida (use YYYY-MM-DD)');
-    }
-    if (isFutureDateOnly(fecha_nacimiento)) {
-      throw httpError(400, 'Fecha de nacimiento no puede ser futura');
-    }
+    validarTextoPersona({ nombres, apellidos, nro_documento, fecha_nacimiento });
 
     const fotoFrente = req.files && req.files.foto_frente && req.files.foto_frente[0];
     const fotoDorso = req.files && req.files.foto_dorso && req.files.foto_dorso[0];
@@ -164,6 +186,7 @@ async function list(req, res, next) {
 
 async function getById(req, res, next) {
   try {
+    validarUuid(req.params.id);
     const result = await pool.query(
       `SELECT id, nombres, apellidos, nro_documento, fecha_nacimiento,
               ruta_foto_frente, ruta_foto_dorso,
@@ -183,6 +206,7 @@ async function getById(req, res, next) {
 // DELETE /api/personas/:id — borra el registro y sus archivos físicos.
 async function remove(req, res, next) {
   try {
+    validarUuid(req.params.id);
     const sel = await pool.query(
       'SELECT ruta_foto_frente, ruta_foto_dorso FROM personas WHERE id = $1',
       [req.params.id]
@@ -217,6 +241,7 @@ async function remove(req, res, next) {
 async function update(req, res, next) {
   const reemplazadas = [];
   try {
+    validarUuid(req.params.id);
     const sel = await pool.query(
       `SELECT id, nombres, apellidos, nro_documento, fecha_nacimiento,
               ruta_foto_frente, ruta_foto_dorso
@@ -233,15 +258,7 @@ async function update(req, res, next) {
     const nro_documento = pick(req.body, 'nro_documento', 'documento');
     const fecha_nacimiento = pick(req.body, 'fecha_nacimiento', 'fechaNacimiento');
 
-    if (!nombres || !apellidos || !nro_documento || !fecha_nacimiento) {
-      throw httpError(400, 'Faltan datos obligatorios: nombres, apellidos, documento y fecha de nacimiento');
-    }
-    if (!isValidDateOnly(fecha_nacimiento)) {
-      throw httpError(400, 'Fecha de nacimiento inválida (use YYYY-MM-DD)');
-    }
-    if (isFutureDateOnly(fecha_nacimiento)) {
-      throw httpError(400, 'Fecha de nacimiento no puede ser futura');
-    }
+    validarTextoPersona({ nombres, apellidos, nro_documento, fecha_nacimiento });
 
     // Fotos opcionales e independientes: solo se reemplaza el lado enviado.
     const nuevaFrente = req.files && req.files.foto_frente && req.files.foto_frente[0];

@@ -88,11 +88,11 @@ export default function RegistrarForm({ onSaved }: { onSaved: () => void }) {
       </div>
       <Seccion titulo="Datos personales">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
-          <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+          <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} maxLength={100} required />
+          <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} maxLength={100} required />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input label="Nro. de documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+          <Input label="Nro. de documento" value={documento} onChange={(e) => setDocumento(e.target.value)} maxLength={20} required />
           <FechaInput label="Fecha de nacimiento" value={fecha} onChange={setFecha} required />
         </div>
       </Seccion>

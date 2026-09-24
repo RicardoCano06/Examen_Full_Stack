@@ -159,7 +159,15 @@ de buscar.
 rechaza con `400` cualquier parámetro `search`. La única vía de filtrado es
 `POST /api/personas/buscar` con captcha válido, y cada ejecución queda
 auditada. Llamar a cualquier endpoint directamente sin token produce
-`400`/`403`, nunca datos filtrados.
+`400`/`403`, nunca datos filtrados. Se acepta `CAPTCHA_SECRET` (o
+`TURNSTILE_SECRET_KEY` como alternativa); el token se recorta y acota.
+
+**Sanitización general**: todo texto se recorta; nombres y apellidos admiten
+100 caracteres y el documento 20 (también con `maxLength` en el frontend);
+multer acota campos de texto (64KB, máx. 20 campos, 2 archivos); los `:id` se
+validan como UUID (`400` si son inválidos); el filtro `q` de auditoría escapa
+comodines `LIKE`; toda consulta SQL es parametrizada y la IP persistida debe
+tener formato válido.
 
 ## 11. Telegram: qué se envía, qué se omite y por qué
 

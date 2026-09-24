@@ -186,6 +186,7 @@ export default function PersonasList() {
             <Input
               placeholder="Nombre, apellido o documento (mín. 3 caracteres)"
               value={search}
+              maxLength={100}
               onChange={(e) => {
                 const v = e.target.value;
                 setSearch(v);

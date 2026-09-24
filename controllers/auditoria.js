@@ -7,6 +7,11 @@ function esFechaValida(s) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(s + 'T00:00:00Z').getTime());
 }
 
+// Escapa comodines LIKE para que %, _ y \ del filtro se busquen literales.
+function escaparLike(s) {
+  return s.replace(/[\\%_]/g, (m) => `\\${m}`);
+}
+
 async function list(req, res, next) {
   try {
     const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
@@ -17,8 +22,8 @@ async function list(req, res, next) {
     const params = [];
     const q = String(req.query.q || '').trim().slice(0, 100);
     if (q) {
-      params.push(`%${q}%`);
-      where.push(`(termino_buscado ILIKE $${params.length} OR ip_origen ILIKE $${params.length})`);
+      params.push(`%${escaparLike(q)}%`);
+      where.push(`(termino_buscado ILIKE $${params.length} ESCAPE '\\' OR ip_origen ILIKE $${params.length} ESCAPE '\\')`);
     }
     const desde = String(req.query.desde || '');
     if (esFechaValida(desde)) {

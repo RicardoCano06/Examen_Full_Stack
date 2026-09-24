@@ -33,6 +33,17 @@ function normalizeIp(ip) {
   return ip;
 }
 
+// La IP que se persiste debe tener formato válido (IPv4/IPv6). Cualquier otro
+// valor se registra como 'desconocida' en lugar de ensuciar la auditoría.
+function esIpValida(ip) {
+  return /^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip) || /^[0-9a-fA-F:]+$/.test(ip);
+}
+
+function sanitizarIp(ip) {
+  const v = String(ip || '').trim().slice(0, 45);
+  return esIpValida(v) ? v : 'desconocida';
+}
+
 function validarTermino(termino) {
   if (!termino || termino.trim().length < 3) {
     throw httpError(400, 'Término de búsqueda inválido (mínimo 3 caracteres)');
@@ -57,7 +68,7 @@ async function fetchWithTimeout(url, options = {}, ms = 3000) {
 
 // Validación síncrona (antes de buscar): si falla -> 403.
 async function verifyTurnstile(token, remoteip) {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const secret = process.env.CAPTCHA_SECRET || process.env.TURNSTILE_SECRET_KEY;
   if (!secret || !token) return false;
   const body = new URLSearchParams({ secret, response: token });
   if (remoteip && remoteip !== 'desconocida') body.append('remoteip', remoteip);
@@ -155,14 +166,16 @@ async function buscar(req, res, next) {
   try {
     const body = req.body || {};
     const terminoRaw = body.termino ?? body.termino_buscado ?? body.q ?? '';
-    const captchaToken = body.captcha_token ?? body.captchaToken ?? '';
+    // Token recortado y acotado: los tokens de Turnstile rondan 1-2KB.
+    const captchaToken = String(body.captcha_token ?? body.captchaToken ?? '').trim().slice(0, 2048);
     const termino = validarTermino(String(terminoRaw));
 
-    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+    // SIEMPRE por el extractor blindado (CF-Connecting-IP, nunca X-Forwarded-For).
+    const ip = sanitizarIp(getClientIp(req));
 
     let captchaOk = false;
     try {
-      captchaOk = await verifyTurnstile(String(captchaToken), ip);
+      captchaOk = await verifyTurnstile(captchaToken, ip);
     } catch {
       captchaOk = false;
     }

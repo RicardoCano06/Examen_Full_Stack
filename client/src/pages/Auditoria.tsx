@@ -98,7 +98,7 @@ export default function Auditoria() {
       <Card className="mb-4 p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1 basis-64">
-            <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} />
           </div>
           <div className="w-40">
             <FechaInput label="Desde" value={desde} onChange={setDesde} />

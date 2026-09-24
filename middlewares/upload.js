@@ -13,6 +13,9 @@ const MIME_TO_EXT = {
 };
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB por archivo
+const MAX_FIELD_SIZE = 64 * 1024; // 64KB por campo de texto (nombres, documento, etc.)
+const MAX_FILES = 2; // foto_frente + foto_dorso
+const MAX_FIELDS = 20; // tope de campos de texto por petición
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
 function httpError(statusCode, message) {
@@ -29,6 +32,9 @@ const upload = multer({
   storage,
   limits: {
     fileSize: MAX_FILE_SIZE,
+    files: MAX_FILES,
+    fields: MAX_FIELDS,
+    fieldSize: MAX_FIELD_SIZE,
   },
   // Aceptamos el archivo aquí y validamos después por magic bytes.
   // NUNCA confiar en file.mimetype ni en la extensión original en este punto.
@@ -100,4 +106,7 @@ module.exports = {
   UPLOADS_DIR,
   ALLOWED_MIMES,
   MAX_FILE_SIZE,
+  MAX_FIELD_SIZE,
+  MAX_FILES,
+  MAX_FIELDS,
 };
