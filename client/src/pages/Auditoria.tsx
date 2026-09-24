@@ -39,7 +39,7 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
-const HEADERS = ['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram', 'Detalle'];
+const HEADERS = ['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram', { label: 'Detalle', center: true }];
 
 export default function Auditoria() {
   const toast = useToast();
@@ -123,7 +123,7 @@ export default function Auditoria() {
                   {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
                 </Badge>
               </td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2 text-center">
                 <button className="text-sm font-medium text-slate-600 hover:text-slate-900" onClick={() => setDetalle(a)}>
                   Ver
                 </button>

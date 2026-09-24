@@ -1,8 +1,18 @@
 import type { ReactNode } from 'react';
 
+export type Header = string | { label: string; center?: boolean };
+
 interface Props {
-  headers: string[];
+  headers: Header[];
   children: ReactNode;
+}
+
+function labelOf(h: Header): string {
+  return typeof h === 'string' ? h : h.label;
+}
+
+function centered(h: Header): boolean {
+  return typeof h !== 'string' && !!h.center;
 }
 
 export default function Table({ headers, children }: Props) {
@@ -12,7 +22,7 @@ export default function Table({ headers, children }: Props) {
         <thead>
           <tr className="bg-slate-100">
             {headers.map((h) => (
-              <th key={h} scope="col" className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">{h}</th>
+              <th key={labelOf(h)} scope="col" className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500${centered(h) ? ' text-center' : ' text-left'}`}>{labelOf(h)}</th>
             ))}
           </tr>
         </thead>

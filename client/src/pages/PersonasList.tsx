@@ -156,7 +156,7 @@ export default function PersonasList() {
   }
 
   const filas = modo === 'search' ? resultados : personas;
-  const HEADERS = ['Persona', 'Documento', 'Nacimiento', 'Edad', 'Fotos', 'Acciones'];
+  const HEADERS = ['Persona', 'Documento', 'Nacimiento', 'Edad', 'Fotos', { label: 'Acciones', center: true }];
 
   return (
     <div>
@@ -234,7 +234,7 @@ export default function PersonasList() {
                   {p.ruta_foto_frente && p.ruta_foto_dorso ? 'OK' : '—'}
                 </Badge>
               </td>
-              <td className="px-4 py-2 text-right">
+              <td className="px-4 py-2 text-center">
                 <ActionsMenu
                   items={[
                     { label: 'Ver', onSelect: () => setVerId(p.id) },
