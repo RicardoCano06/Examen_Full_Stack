@@ -1,3 +1,5 @@
+import Table from './Table';
+
 export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-2 text-sm text-gray-500" role="status">
@@ -10,16 +12,25 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   );
 }
 
-export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+export function TableCardSkeleton({ headers, rows = 10, avatar = false }: { headers: string[]; rows?: number; avatar?: boolean }) {
   return (
-    <div className="animate-pulse" aria-hidden="true">
+    <Table headers={headers}>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-2 border-b border-gray-100 py-3">
-          {Array.from({ length: cols }).map((_, j) => (
-            <div key={j} className="h-4 flex-1 rounded bg-gray-200" />
+        <tr key={i} className="animate-pulse" aria-hidden="true">
+          {headers.map((h, j) => (
+            <td key={h} className="px-4 py-3">
+              {avatar && j === 0 ? (
+                <span className="flex items-center gap-3">
+                  <span className="h-9 w-9 shrink-0 rounded-full bg-slate-200" />
+                  <span className="h-4 flex-1 rounded bg-slate-200" />
+                </span>
+              ) : (
+                <div className="h-4 rounded bg-slate-200" />
+              )}
+            </td>
           ))}
-        </div>
+        </tr>
       ))}
-    </div>
+    </Table>
   );
 }

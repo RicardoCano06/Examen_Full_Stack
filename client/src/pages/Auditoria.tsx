@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { listarAuditoria, type RegistroAuditoria } from '../api/client';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
-import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
 import Table from '../components/Table';
-import { TableSkeleton } from '../components/Spinner';
+import { TableCardSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
 
 function geoResumen(info: unknown): string {
@@ -57,7 +56,7 @@ export default function Auditoria() {
         description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
       />
       {loading ? (
-        <Card className="p-4"><TableSkeleton rows={6} cols={6} /></Card>
+        <TableCardSkeleton headers={['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram']} rows={10} />
       ) : filas.length === 0 ? (
         <EmptyState message="Aún no hay búsquedas registradas." />
       ) : (

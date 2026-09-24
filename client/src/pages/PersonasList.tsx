@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { eliminarPersona, listarPersonas, type Persona } from '../api/client';
 import Avatar from '../components/Avatar';
@@ -8,7 +8,7 @@ import EmptyState from '../components/EmptyState';
 import Input from '../components/Input';
 import PageHeader from '../components/PageHeader';
 import Table from '../components/Table';
-import { TableSkeleton } from '../components/Spinner';
+import { TableCardSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
 
 // Solo fecha (es-PY), sin hora: se parsea el YYYY-MM-DD como fecha local
@@ -28,25 +28,43 @@ export default function PersonasList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const seq = useRef(0);
+  const ultimoBuscado = useRef<string | null>(null);
 
   async function cargar(p = page, q = search) {
+    const mi = ++seq.current;
     setLoading(true);
     try {
       const res = await listarPersonas(p, 10, q);
+      if (seq.current !== mi) return; // respuesta vieja: se descarta
       setPersonas(res.data);
       setTotalPages(res.totalPages || 1);
       setTotal(res.total || 0);
     } catch {
+      if (seq.current !== mi) return;
       toast('error', 'No se pudo cargar el listado');
     } finally {
-      setLoading(false);
+      if (seq.current === mi) setLoading(false);
     }
   }
 
   useEffect(() => {
-    void cargar(1, '');
+    // Sin cambio real de término (p. ej. remontaje de StrictMode en dev): no refiltrar.
+    if (ultimoBuscado.current === search) return;
+    if (search === '' && ultimoBuscado.current === null) {
+      ultimoBuscado.current = '';
+      void cargar(1, '');
+      return;
+    }
+    // Búsqueda en vivo: al escribir se filtra solo tras 400 ms de pausa.
+    const t = window.setTimeout(() => {
+      ultimoBuscado.current = search;
+      setPage(1);
+      void cargar(1, search);
+    }, 400);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [search]);
 
   async function onEliminar(id: string) {
     if (!window.confirm('¿Eliminar esta persona y sus imágenes?')) return;
@@ -75,11 +93,11 @@ export default function PersonasList() {
           <div className="flex-1">
             <Input placeholder="Buscar por nombre o documento" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          <Button variant="secondary" onClick={() => { setPage(1); void cargar(1, search); }}>Buscar</Button>
+          <Button variant="secondary" onClick={() => { ultimoBuscado.current = search; setPage(1); void cargar(1, search); }}>Buscar</Button>
         </div>
       </Card>
       {loading ? (
-        <Card className="p-4"><TableSkeleton rows={6} cols={5} /></Card>
+        <TableCardSkeleton headers={['Persona', 'Documento', 'Nacimiento', 'Edad', 'Acciones']} rows={10} avatar />
       ) : personas.length === 0 ? (
         <EmptyState
           message="Sin resultados para los criterios indicados."
@@ -96,7 +114,7 @@ export default function PersonasList() {
               <td className="px-4 py-3">
                 <span className="flex items-center gap-3">
                   <Avatar nombres={p.nombres} apellidos={p.apellidos} />
-                  <span className="font-medium text-slate-900">{p.nombres} {p.apellidos}</span>
+                  <span className="font-medium text-slate-900"><Link className="hover:text-blue-700 hover:underline" to={`/personas/${p.id}`}>{p.nombres} {p.apellidos}</Link></span>
                 </span>
               </td>
               <td className="px-4 py-3 font-mono text-[13px] text-slate-600">{p.nro_documento}</td>
