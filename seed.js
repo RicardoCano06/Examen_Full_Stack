@@ -108,7 +108,7 @@ async function main() {
 
     for (let i = 0; i < size; i++) {
       const nombres = faker.person.firstName();
-      const apellidos = `${faker.person.lastName()} ${faker.person.lastName()}`;
+      const apellidos = faker.person.lastName(); // ya viene doble ("Calvillo Monroy")
       const nro_documento = documentoUnico(usados);
       const fecha_nacimiento = fechaNacimientoPasada();
       const uuid1 = uuidv4();
