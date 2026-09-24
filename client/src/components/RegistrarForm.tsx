@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import Button from './Button';
+import FechaInput from './FechaInput';
 import FileDrop from './FileDrop';
 import Input from './Input';
 import { useToast } from './Toast';
@@ -35,6 +36,10 @@ export default function RegistrarForm({ onSaved }: { onSaved: () => void }) {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!fecha) {
+      toast('error', 'Ingrese una fecha de nacimiento válida (DD/MM/AAAA)');
+      return;
+    }
     if (!frente || !dorso) {
       toast('error', 'Debe adjuntar las fotos de frente y dorso');
       return;
@@ -88,7 +93,7 @@ export default function RegistrarForm({ onSaved }: { onSaved: () => void }) {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input label="Nro. de documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
-          <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+          <FechaInput label="Fecha de nacimiento" value={fecha} onChange={setFecha} required />
         </div>
       </Seccion>
       <Seccion titulo="Fotos del documento">

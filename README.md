@@ -94,7 +94,7 @@ Copy-Item client\.env.example client\.env
 ```powershell
 docker compose up -d          # o PostgreSQL nativo + psql -f init.sql
 npm install; node server.js   # API en :3000
-npm run seed                  # 500 personas + 1000 PNG en lotes de 50
+npm run seed                  # 500 personas + 1000 PNG en lotes de 50 (con relleno verificado)
 cd client; npm install; npm run dev   # SPA en :5173 (proxy /api → :3000)
 ```
 
@@ -208,7 +208,7 @@ y migración del storage a S3 cuando haya más de una instancia.
 | Script | Comando | Descripción |
 |---|---|---|
 | API | `node server.js` | Inicia el backend (o `npm start` / `npm run dev`) |
-| Seed | `npm run seed` | 500 personas + 1000 imágenes en lotes de 50 |
+| Seed | `npm run seed` | 500 personas + 1000 imágenes en lotes de 50, con conteo final verificado |
 | Limpieza | `npm run cleanup` | Purga manual de auditoría mayor a 30 días |
 | Frontend | `npm run dev` / `npm run build` | Dev en `:5173` / `tsc` + compilado |
 

@@ -4,6 +4,7 @@ import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
+import FechaInput from '../components/FechaInput';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
@@ -97,8 +98,8 @@ export default function Auditoria() {
       <Card className="mb-4 p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <Input placeholder="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} />
-          <Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} aria-label="Desde" />
-          <Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} aria-label="Hasta" />
+          <FechaInput label="Desde" value={desde} onChange={setDesde} />
+          <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
           <div className="flex gap-2">
             <Button onClick={onFiltrar}>Filtrar</Button>
             <Button variant="secondary" onClick={onLimpiar}>Limpiar</Button>

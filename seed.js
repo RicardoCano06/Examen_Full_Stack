@@ -94,6 +94,50 @@ async function limpiar() {
   );
 }
 
+async function contar() {
+  const r = await pool.query('SELECT COUNT(*)::int AS n FROM personas');
+  return r.rows[0].n;
+}
+
+async function insertarLote(cantidad, usados) {
+  const filas = [];
+  const escrituras = [];
+
+  for (let i = 0; i < cantidad; i++) {
+    const nombres = faker.person.firstName();
+    const apellidos = faker.person.lastName(); // ya viene doble ("Calvillo Monroy")
+    const nro_documento = documentoUnico(usados);
+    const fecha_nacimiento = fechaNacimientoPasada();
+    const uuid1 = uuidv4();
+    const uuid2 = uuidv4();
+    const ruta1 = `uploads/${uuid1}.png`;
+    const ruta2 = `uploads/${uuid2}.png`;
+
+    escrituras.push(
+      fs.writeFile(path.join(UPLOADS_DIR, `${uuid1}.png`), SAMPLE_IMAGE),
+      fs.writeFile(path.join(UPLOADS_DIR, `${uuid2}.png`), SAMPLE_IMAGE)
+    );
+    filas.push([nombres, apellidos, nro_documento, fecha_nacimiento, ruta1, ruta2]);
+  }
+
+  await Promise.all(escrituras);
+
+  // Batch insert: 1 sola query por lote para no agotar conexiones ni memoria.
+  const values = [];
+  const params = [];
+  filas.forEach((f, idx) => {
+    const b = idx * 6;
+    values.push(`($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4}, $${b + 5}, $${b + 6})`);
+    params.push(...f);
+  });
+  await pool.query(
+    `INSERT INTO personas (nombres, apellidos, nro_documento, fecha_nacimiento, ruta_foto_frente, ruta_foto_dorso) VALUES ${values.join(', ')}`,
+    params
+  );
+
+  return filas.length;
+}
+
 async function main() {
   console.log('Seed: limpiando tabla personas y carpeta uploads/ ...');
   await limpiar();
@@ -103,46 +147,23 @@ async function main() {
 
   for (let offset = 0; offset < TOTAL; offset += BATCH_SIZE) {
     const size = Math.min(BATCH_SIZE, TOTAL - offset);
-    const filas = [];
-    const escrituras = [];
-
-    for (let i = 0; i < size; i++) {
-      const nombres = faker.person.firstName();
-      const apellidos = faker.person.lastName(); // ya viene doble ("Calvillo Monroy")
-      const nro_documento = documentoUnico(usados);
-      const fecha_nacimiento = fechaNacimientoPasada();
-      const uuid1 = uuidv4();
-      const uuid2 = uuidv4();
-      const ruta1 = `uploads/${uuid1}.png`;
-      const ruta2 = `uploads/${uuid2}.png`;
-
-      escrituras.push(
-        fs.writeFile(path.join(UPLOADS_DIR, `${uuid1}.png`), SAMPLE_IMAGE),
-        fs.writeFile(path.join(UPLOADS_DIR, `${uuid2}.png`), SAMPLE_IMAGE)
-      );
-      filas.push([nombres, apellidos, nro_documento, fecha_nacimiento, ruta1, ruta2]);
-    }
-
-    await Promise.all(escrituras);
-
-    // Batch insert: 1 sola query por lote para no agotar conexiones ni memoria.
-    const values = [];
-    const params = [];
-    filas.forEach((f, idx) => {
-      const b = idx * 6;
-      values.push(`($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4}, $${b + 5}, $${b + 6})`);
-      params.push(...f);
-    });
-    await pool.query(
-      `INSERT INTO personas (nombres, apellidos, nro_documento, fecha_nacimiento, ruta_foto_frente, ruta_foto_dorso) VALUES ${values.join(', ')}`,
-      params
-    );
-
-    insertados += filas.length;
+    insertados += await insertarLote(size, usados);
     console.log(`  lote ${offset / BATCH_SIZE + 1}: ${insertados}/${TOTAL}`);
   }
 
-  console.log(`Seed completo: ${insertados} personas con 2 imágenes cada una.`);
+  // Garantía de volumen mínimo: si algo falló en silencio o hubo colisiones,
+  // se rellena hasta TOTAL verificando el conteo real en BD (máx. 5 rondas).
+  for (let ronda = 0; ronda < 5; ronda++) {
+    const actual = await contar();
+    if (actual >= TOTAL) break;
+    const falta = TOTAL - actual;
+    console.log(`  relleno: faltan ${falta}, insertando...`);
+    await insertarLote(Math.min(BATCH_SIZE, falta), usados);
+  }
+
+  const final = await contar();
+  if (final < TOTAL) throw new Error(`Seed incompleto: ${final}/${TOTAL}`);
+  console.log(`Seed completo: ${final} personas con 2 imágenes cada una.`);
   await pool.end();
 }
 

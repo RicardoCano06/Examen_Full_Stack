@@ -45,6 +45,8 @@ export default function PersonasList() {
   const [loading, setLoading] = useState(true);
   const [verId, setVerId] = useState<string | null>(null);
   const [editarId, setEditarId] = useState<string | null>(null);
+  const [eliminar, setEliminar] = useState<{ id: string; nombre: string } | null>(null);
+  const [eliminando, setEliminando] = useState(false);
   const [nuevaAbierta, setNuevaAbierta] = useState(false);
   const seq = useRef(0);
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -145,14 +147,18 @@ export default function PersonasList() {
     await cargar(1);
   }
 
-  async function onEliminar(id: string) {
-    if (!window.confirm('¿Eliminar esta persona y sus imágenes?')) return;
+  async function onEliminar() {
+    if (!eliminar) return;
+    setEliminando(true);
     try {
-      await eliminarPersona(id);
+      await eliminarPersona(eliminar.id);
       toast('success', 'Persona eliminada');
+      setEliminar(null);
       await volverABrowse();
     } catch {
       toast('error', 'No se pudo eliminar');
+    } finally {
+      setEliminando(false);
     }
   }
 
@@ -241,7 +247,7 @@ export default function PersonasList() {
                   items={[
                     { label: 'Ver', onSelect: () => setVerId(p.id) },
                     { label: 'Editar', onSelect: () => setEditarId(p.id) },
-                    { label: 'Eliminar', tone: 'danger', onSelect: () => void onEliminar(p.id) },
+                    { label: 'Eliminar', tone: 'danger', onSelect: () => setEliminar({ id: p.id, nombre: `${p.apellidos}, ${p.nombres}` }) },
                   ]}
                 />
               </td>
@@ -287,7 +293,26 @@ export default function PersonasList() {
           />
         </Modal>
       )}
-      {verId && (        <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
+      {eliminar && (
+        <Modal title="Eliminar persona" onClose={() => { if (!eliminando) setEliminar(null); }}>
+          <p className="text-sm text-slate-700">
+            ¿Eliminar a <span className="font-semibold text-slate-900">{eliminar.nombre}</span>?
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Se borran el registro y sus fotos. Esta acción no se puede deshacer.
+          </p>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setEliminar(null)} disabled={eliminando}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={() => void onEliminar()} loading={eliminando}>
+              Eliminar
+            </Button>
+          </div>
+        </Modal>
+      )}
+      {verId && (
+        <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
           <DetalleContenido id={verId} />
         </Modal>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, obtenerPersona } from '../api/client';
 import Button from './Button';
+import FechaInput from './FechaInput';
 import FileDrop from './FileDrop';
 import Input from './Input';
 import { Spinner } from './Spinner';
@@ -24,7 +25,13 @@ export default function EditarForm({ id, onSaved }: { id: string; onSaved: () =>
   const [fecha, setFecha] = useState('');
   const [frente, setFrente] = useState<File | null>(null);
   const [dorso, setDorso] = useState<File | null>(null);
+  const [fotoFrenteActual, setFotoFrenteActual] = useState('');
+  const [fotoDorsoActual, setFotoDorsoActual] = useState('');
   const [sending, setSending] = useState(false);
+
+  function base(ruta: string): string {
+    return ruta.split('/').pop() || '';
+  }
 
   useEffect(() => {
     (async () => {
@@ -34,6 +41,8 @@ export default function EditarForm({ id, onSaved }: { id: string; onSaved: () =>
         setApellidos(p.apellidos);
         setDocumento(p.nro_documento);
         setFecha(p.fecha_nacimiento.slice(0, 10));
+        setFotoFrenteActual(p.ruta_foto_frente || '');
+        setFotoDorsoActual(p.ruta_foto_dorso || '');
       } catch {
         toast('error', 'No se pudo cargar la persona');
       } finally {
@@ -45,6 +54,10 @@ export default function EditarForm({ id, onSaved }: { id: string; onSaved: () =>
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!fecha) {
+      toast('error', 'Ingrese una fecha de nacimiento válida (DD/MM/AAAA)');
+      return;
+    }
     // Mismo FormData atómico que el registro; las fotos son opcionales:
     // solo se reemplaza el lado enviado, el resto se conserva.
     const form = new FormData();
@@ -80,10 +93,23 @@ export default function EditarForm({ id, onSaved }: { id: string; onSaved: () =>
         <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
-          <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+          <FechaInput label="Fecha de nacimiento" value={fecha} onChange={setFecha} required />
         </div>
       </Seccion>
       <Seccion titulo="Reemplazo de fotos (opcional)">
+        {(fotoFrenteActual || fotoDorsoActual) && (
+          <div className="flex gap-4">
+            {[
+              { titulo: 'Foto actual · frente', ruta: fotoFrenteActual },
+              { titulo: 'Foto actual · dorso', ruta: fotoDorsoActual },
+            ].filter((f) => f.ruta).map((f) => (
+              <figure key={f.titulo} className="flex items-center gap-2">
+                <img src={`/uploads/${base(f.ruta)}`} alt={f.titulo} className="aspect-[85.6/54] w-24 rounded-lg object-cover ring-1 ring-slate-900/10" />
+                <figcaption className="text-xs text-slate-500">{f.titulo}</figcaption>
+              </figure>
+            ))}
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FileDrop label="Frente · se conserva la actual si se omite" file={frente} onChange={setFrente} />
           <FileDrop label="Dorso · se conserva la actual si se omite" file={dorso} onChange={setDorso} />
