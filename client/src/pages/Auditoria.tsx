@@ -96,10 +96,16 @@ export default function Auditoria() {
         description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
       />
       <Card className="mb-4 p-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <Input placeholder="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} />
-          <FechaInput label="Desde" value={desde} onChange={setDesde} />
-          <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-0 flex-1 basis-64">
+            <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <div className="w-40">
+            <FechaInput label="Desde" value={desde} onChange={setDesde} />
+          </div>
+          <div className="w-40">
+            <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
+          </div>
           <div className="flex gap-2">
             <Button onClick={onFiltrar}>Filtrar</Button>
             <Button variant="secondary" onClick={onLimpiar}>Limpiar</Button>
