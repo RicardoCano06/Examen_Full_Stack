@@ -171,25 +171,34 @@ export default function PersonasList() {
         }
       />
       <Card className="mb-4 p-4">
-        <div className="flex flex-col gap-3">
-          <Input
-            placeholder="Buscar por nombre, apellido o documento (mín. 3 caracteres)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void onBuscar(); }}
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
-            <div ref={widgetRef} />
-            <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'}>
-              Buscar
-            </Button>
-            {modo === 'search' && (
-              <Button variant="secondary" onClick={onLimpiar}>
-                Limpiar
-              </Button>
-            )}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1 basis-64">
+            <Input
+              placeholder="Nombre, apellido o documento (mín. 3 caracteres)"
+              value={search}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSearch(v);
+                // Al vaciar el campo se vuelve al listado completo.
+                if (v.trim() === '' && modo === 'search') {
+                  setModo('browse');
+                  setPage(1);
+                  void cargar(1);
+                }
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') void onBuscar(); }}
+            />
           </div>
+          {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
+          <div ref={widgetRef} />
+          <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'}>
+            Buscar
+          </Button>
+          {modo === 'search' && (
+            <Button variant="secondary" onClick={onLimpiar}>
+              Limpiar
+            </Button>
+          )}
         </div>
       </Card>
       {loading ? (
