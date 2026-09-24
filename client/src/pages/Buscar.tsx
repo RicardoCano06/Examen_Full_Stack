@@ -89,8 +89,24 @@ export default function Buscar() {
 
   return (
     <div>
-      <PageHeader title="Buscar personas" description="Verificación anti-automatización obligatoria antes de cada búsqueda" />
+      <PageHeader
+        title="Buscar personas"
+        breadcrumb={['Inicio', 'Buscar']}
+        description="Verificación anti-automatización obligatoria antes de cada búsqueda"
+      />
       <Card className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-400" aria-hidden="true">
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          </span>
+          <div>
+            <p className="font-semibold text-slate-900">Consulta con captcha</p>
+            <p className="text-sm text-slate-500">Resuelva la verificación y pulse Buscar o Enter</p>
+          </div>
+        </div>
         <form
           className="flex flex-col gap-4"
           onSubmit={(e) => {
@@ -119,7 +135,7 @@ export default function Buscar() {
               <Link key={p.id} to={`/personas/${p.id}`} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5 transition-colors hover:ring-slate-300">
                 <Avatar nombres={p.nombres} apellidos={p.apellidos} />
                 <span className="flex-1">
-                  <span className="block text-sm font-medium text-slate-900">{p.nombres} {p.apellidos}</span>
+                  <span className="block text-sm font-semibold text-slate-900">{p.nombres} {p.apellidos}</span>
                   <span className="block font-mono text-xs text-slate-500">{p.nro_documento}</span>
                 </span>
                 <span className="text-xs text-slate-500">{p.edad !== undefined ? `${p.edad} años` : '—'}</span>

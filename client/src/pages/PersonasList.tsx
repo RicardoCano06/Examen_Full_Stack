@@ -31,6 +31,7 @@ export default function PersonasList() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const PAGE_SIZE = 10;
   const [verId, setVerId] = useState<string | null>(null);
   const [editarId, setEditarId] = useState<string | null>(null);
   const seq = useRef(0);
@@ -40,7 +41,7 @@ export default function PersonasList() {
     const mi = ++seq.current;
     setLoading(true);
     try {
-      const res = await listarPersonas(p, 10, q);
+      const res = await listarPersonas(p, PAGE_SIZE, q);
       if (seq.current !== mi) return; // respuesta vieja: se descarta
       setPersonas(res.data);
       setTotalPages(res.totalPages || 1);
@@ -86,7 +87,8 @@ export default function PersonasList() {
     <div>
       <PageHeader
         title="Personas"
-        description={total > 0 ? `${total} registros en el sistema` : 'Registro de personas con documento de identidad'}
+        breadcrumb={['Inicio', 'Personas']}
+        description="Registro de personas con documento de identidad"
         actions={
           <Link to="/registrar">
             <Button>Nueva persona</Button>
@@ -119,7 +121,7 @@ export default function PersonasList() {
               <td className="px-4 py-2">
                 <span className="flex items-center gap-3">
                   <Avatar nombres={p.nombres} apellidos={p.apellidos} />
-                  <span className="font-medium text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
+                  <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
                 </span>
               </td>
               <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{p.nro_documento}</td>
@@ -151,6 +153,9 @@ export default function PersonasList() {
           Anterior
         </Button>
         <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
+        <span className="text-sm text-slate-400">
+          Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
+        </span>
         <Button
           variant="secondary"
           disabled={page >= totalPages}

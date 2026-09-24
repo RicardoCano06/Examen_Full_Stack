@@ -68,9 +68,26 @@ export default function Registrar() {
 
   return (
     <div>
-      <PageHeader title="Registrar persona" description="Alta atómica: datos y ambas fotos en una sola petición" />
+      <PageHeader
+        title="Registrar persona"
+        breadcrumb={['Inicio', 'Personas', 'Registrar']}
+        description="Alta atómica: datos y ambas fotos en una sola petición"
+      />
       <form onSubmit={(e) => void onSubmit(e)}>
         <Card className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-400" aria-hidden="true">
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M19 8v6M22 11h-6" />
+              </svg>
+            </span>
+            <div>
+              <p className="font-semibold text-slate-900">Nuevo registro</p>
+              <p className="text-sm text-slate-500">Complete todos los campos obligatorios</p>
+            </div>
+          </div>
           <Seccion titulo="Datos personales">
             <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
             <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />

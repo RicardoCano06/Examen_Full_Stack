@@ -53,6 +53,7 @@ export default function Auditoria() {
     <div>
       <PageHeader
         title="Auditoría de búsquedas"
+        breadcrumb={['Inicio', 'Auditoría']}
         description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
       />
       {loading ? (
@@ -64,7 +65,7 @@ export default function Auditoria() {
           {filas.map((a) => (
             <tr key={a.id} className="transition-colors hover:bg-slate-50/70">
               <td className="whitespace-nowrap px-4 py-2 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
-              <td className="px-4 py-2 font-mono text-[13px] text-slate-900">{a.termino_buscado}</td>
+              <td className="px-4 py-2 font-mono text-[13px] font-semibold text-slate-900">{a.termino_buscado}</td>
               <td className="px-4 py-2"><Badge tone="blue">{a.cantidad_resultados}</Badge></td>
               <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{a.ip_origen}</td>
               <td className="px-4 py-2 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
