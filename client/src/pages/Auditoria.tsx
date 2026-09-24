@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { listarAuditoria, type RegistroAuditoria } from '../api/client';
+import Badge from '../components/Badge';
 import Button from '../components/Button';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
+import PageHeader from '../components/PageHeader';
 import Table from '../components/Table';
 import { TableSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
@@ -24,6 +28,7 @@ export default function Auditoria() {
   const [filas, setFilas] = useState<RegistroAuditoria[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   async function cargar(p = page) {
@@ -32,6 +37,7 @@ export default function Auditoria() {
       const res = await listarAuditoria(p, 10);
       setFilas(res.data);
       setTotalPages(res.totalPages || 1);
+      setTotal(res.total || 0);
     } catch {
       toast('error', 'No se pudo cargar la auditoría');
     } finally {
@@ -46,24 +52,33 @@ export default function Auditoria() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Auditoría de búsquedas</h1>
+      <PageHeader
+        title="Auditoría de búsquedas"
+        description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
+      />
       {loading ? (
-        <div className="w-full bg-white p-4 shadow-sm ring-1 ring-gray-900/5 rounded-xl"><TableSkeleton rows={6} cols={6} /></div>
+        <Card className="p-4"><TableSkeleton rows={6} cols={6} /></Card>
+      ) : filas.length === 0 ? (
+        <EmptyState message="Aún no hay búsquedas registradas." />
       ) : (
-        <Table headers={['Fecha', 'Término', 'Resultados', 'IP', 'Geo', 'Telegram']}>
+        <Table headers={['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram']}>
           {filas.map((a) => (
-            <tr key={a.id} className="border-b last:border-0">
-              <td className="p-3">{new Date(a.fecha_hora).toLocaleString()}</td>
-              <td className="p-3">{a.termino_buscado}</td>
-              <td className="p-3">{a.cantidad_resultados}</td>
-              <td className="p-3">{a.ip_origen}</td>
-              <td className="p-3">{geoResumen(a.info_geolocalizacion)}</td>
-              <td className="p-3">{a.notificacion_telegram_exitosa ? 'OK' : 'Fallo'}</td>
+            <tr key={a.id} className="transition-colors hover:bg-slate-50/70">
+              <td className="whitespace-nowrap px-4 py-3 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
+              <td className="px-4 py-3 font-mono text-[13px] text-slate-900">{a.termino_buscado}</td>
+              <td className="px-4 py-3"><Badge tone="blue">{a.cantidad_resultados}</Badge></td>
+              <td className="px-4 py-3 font-mono text-[13px] text-slate-600">{a.ip_origen}</td>
+              <td className="px-4 py-3 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
+              <td className="px-4 py-3">
+                <Badge tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
+                  {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
+                </Badge>
+              </td>
             </tr>
           ))}
         </Table>
       )}
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex items-center gap-3">
         <Button
           variant="secondary"
           disabled={page <= 1}
@@ -71,7 +86,7 @@ export default function Auditoria() {
         >
           Anterior
         </Button>
-        <span className="text-sm">Página {page} de {totalPages}</span>
+        <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
         <Button
           variant="secondary"
           disabled={page >= totalPages}

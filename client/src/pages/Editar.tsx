@@ -2,9 +2,20 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, obtenerPersona } from '../api/client';
 import Button from '../components/Button';
-import Input from '../components/Input';
+import Card from '../components/Card';
+import Input, { INPUT_CLASS } from '../components/Input';
+import PageHeader from '../components/PageHeader';
 import { Spinner } from '../components/Spinner';
 import { useToast } from '../components/Toast';
+
+function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <fieldset>
+      <legend className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{titulo}</legend>
+      <div className="flex flex-col gap-4">{children}</div>
+    </fieldset>
+  );
+}
 
 export default function Editar() {
   const { id = '' } = useParams();
@@ -68,31 +79,39 @@ export default function Editar() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">Editar persona</h1>
-      <form onSubmit={(e) => void onSubmit(e)} className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
-        <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
-        <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
-        <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Reemplazar frente (opcional)</span>
-          <input
-            className="block h-10 w-full rounded-md border-0 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setFrente(e.target.files?.[0] || null)}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Reemplazar dorso (opcional)</span>
-          <input
-            className="block h-10 w-full rounded-md border-0 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent sm:text-sm"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setDorso(e.target.files?.[0] || null)}
-          />
-        </label>
-        <Button type="submit" loading={sending}>Guardar cambios</Button>
+      <PageHeader title="Editar persona" description="Modificación atómica con reemplazo opcional de fotos" />
+      <form onSubmit={(e) => void onSubmit(e)}>
+        <Card className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
+          <Seccion titulo="Datos personales">
+            <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+            <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+              <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+            </div>
+          </Seccion>
+          <Seccion titulo="Reemplazo de fotos (opcional)">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Frente · se conserva la actual si se omite</span>
+              <input
+                className={INPUT_CLASS}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setFrente(e.target.files?.[0] || null)}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Dorso · se conserva la actual si se omite</span>
+              <input
+                className={INPUT_CLASS}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setDorso(e.target.files?.[0] || null)}
+              />
+            </label>
+          </Seccion>
+          <Button type="submit" loading={sending}>Guardar cambios</Button>
+        </Card>
       </form>
     </div>
   );

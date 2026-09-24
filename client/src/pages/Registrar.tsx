@@ -1,8 +1,19 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import Button from '../components/Button';
+import Card from '../components/Card';
 import Input, { INPUT_CLASS } from '../components/Input';
+import PageHeader from '../components/PageHeader';
 import { useToast } from '../components/Toast';
+
+function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <fieldset>
+      <legend className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{titulo}</legend>
+      <div className="flex flex-col gap-4">{children}</div>
+    </fieldset>
+  );
+}
 
 export default function Registrar() {
   const toast = useToast();
@@ -57,33 +68,41 @@ export default function Registrar() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Registrar persona</h1>
-      <form onSubmit={(e) => void onSubmit(e)} className="max-w-2xl mx-auto bg-white p-8 shadow-sm ring-1 ring-gray-900/5 rounded-xl flex flex-col gap-4">
-        <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
-        <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
-        <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
-        <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Foto frente (JPEG/PNG/WEBP, máx. 5MB)</span>
-          <input
-            className={INPUT_CLASS}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setFrente(e.target.files?.[0] || null)}
-            required
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-gray-700">Foto dorso (JPEG/PNG/WEBP, máx. 5MB)</span>
-          <input
-            className={INPUT_CLASS}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setDorso(e.target.files?.[0] || null)}
-            required
-          />
-        </label>
-        <Button type="submit" loading={sending}>Registrar</Button>
+      <PageHeader title="Registrar persona" description="Alta atómica: datos y ambas fotos en una sola petición" />
+      <form onSubmit={(e) => void onSubmit(e)}>
+        <Card className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
+          <Seccion titulo="Datos personales">
+            <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+            <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+              <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+            </div>
+          </Seccion>
+          <Seccion titulo="Documento de identidad">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Foto frente · JPEG/PNG/WEBP · máx. 5 MB</span>
+              <input
+                className={INPUT_CLASS}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setFrente(e.target.files?.[0] || null)}
+                required
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Foto dorso · JPEG/PNG/WEBP · máx. 5 MB</span>
+              <input
+                className={INPUT_CLASS}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setDorso(e.target.files?.[0] || null)}
+                required
+              />
+            </label>
+          </Seccion>
+          <Button type="submit" loading={sending}>Registrar persona</Button>
+        </Card>
       </form>
     </div>
   );

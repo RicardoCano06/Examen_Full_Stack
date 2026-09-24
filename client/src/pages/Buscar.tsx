@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { buscarPersonas, type Persona } from '../api/client';
+import Avatar from '../components/Avatar';
 import Button from '../components/Button';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 import Input from '../components/Input';
+import PageHeader from '../components/PageHeader';
 import { useToast } from '../components/Toast';
 
 declare global {
@@ -23,6 +28,7 @@ export default function Buscar() {
   const [termino, setTermino] = useState('');
   const [token, setToken] = useState('');
   const [resultados, setResultados] = useState<Persona[]>([]);
+  const [buscado, setBuscado] = useState(false);
   const [searching, setSearching] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string>('');
@@ -64,6 +70,7 @@ export default function Buscar() {
     try {
       const res = await buscarPersonas(termino.trim(), token);
       setResultados(res.resultados || []);
+      setBuscado(true);
       // El token es de un solo uso: se resetea el widget para la próxima búsqueda.
       setToken('');
       window.turnstile?.reset?.(widgetId.current || undefined);
@@ -82,26 +89,45 @@ export default function Buscar() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">Buscar personas</h1>
-      <div className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <Input
-          label="Nombre, apellido o documento"
-          value={termino}
-          onChange={(e) => setTermino(e.target.value)}
-        />
-        {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
-        <div ref={widgetRef} />
-        <Button onClick={() => void onBuscar()} disabled={!token} loading={searching}>
-          Buscar
-        </Button>
-      </div>
-      <ul className="mx-auto mt-4 flex max-w-2xl flex-col gap-2">
-        {resultados.map((p) => (
-          <li key={p.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            {p.nombres} {p.apellidos} — {p.nro_documento} {p.edad !== undefined && `(edad: ${p.edad})`}
-          </li>
-        ))}
-      </ul>
+      <PageHeader title="Buscar personas" description="Verificación anti-automatización obligatoria antes de cada búsqueda" />
+      <Card className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void onBuscar();
+          }}
+        >
+          <Input
+            label="Nombre, apellido o documento"
+            value={termino}
+            onChange={(e) => setTermino(e.target.value)}
+          />
+          {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
+          <div ref={widgetRef} />
+          <Button type="submit" disabled={!token} loading={searching}>
+            Buscar
+          </Button>
+        </form>
+      </Card>
+      {buscado && (
+        <div className="mx-auto mt-4 flex max-w-2xl flex-col gap-2">
+          {resultados.length === 0 ? (
+            <EmptyState message="Sin resultados para ese término." />
+          ) : (
+            resultados.map((p) => (
+              <Link key={p.id} to={`/personas/${p.id}`} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-colors hover:ring-blue-300">
+                <Avatar nombres={p.nombres} apellidos={p.apellidos} />
+                <span className="flex-1">
+                  <span className="block text-sm font-medium text-slate-900">{p.nombres} {p.apellidos}</span>
+                  <span className="block font-mono text-xs text-slate-500">{p.nro_documento}</span>
+                </span>
+                <span className="text-xs text-slate-500">{p.edad !== undefined ? `${p.edad} años` : '—'}</span>
+              </Link>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
