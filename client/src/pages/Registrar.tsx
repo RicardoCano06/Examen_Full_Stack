@@ -1,22 +1,32 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../api/client';
+import Button from '../components/Button';
+import Input, { INPUT_CLASS } from '../components/Input';
+import { useToast } from '../components/Toast';
 
 export default function Registrar() {
+  const toast = useToast();
   const [nombres, setNombres] = useState('');
   const [apellidos, setApellidos] = useState('');
   const [documento, setDocumento] = useState('');
   const [fecha, setFecha] = useState('');
   const [frente, setFrente] = useState<File | null>(null);
   const [dorso, setDorso] = useState<File | null>(null);
-  const [mensaje, setMensaje] = useState('');
-  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+
+  function limpiar() {
+    setNombres('');
+    setApellidos('');
+    setDocumento('');
+    setFecha('');
+    setFrente(null);
+    setDorso(null);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setMensaje('');
-    setError('');
     if (!frente || !dorso) {
-      setError('Debe adjuntar foto_frente y foto_dorso');
+      toast('error', 'Debe adjuntar foto_frente y foto_dorso');
       return;
     }
     // Un único FormData con textos + 2 archivos en la misma petición POST.
@@ -27,39 +37,53 @@ export default function Registrar() {
     form.append('fecha_nacimiento', fecha);
     form.append('foto_frente', frente);
     form.append('foto_dorso', dorso);
+    setSending(true);
     try {
       // No fijar Content-Type manualmente: el navegador agrega el boundary.
       await api.post('/personas', form);
-      setMensaje('Persona registrada correctamente');
+      toast('success', 'Persona registrada correctamente');
+      limpiar();
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const r = (err as { response?: { status?: number; data?: { error?: string } } }).response;
-        setError(r?.data?.error || `Error ${r?.status || ''} al registrar`);
+        toast('error', r?.data?.error || `Error ${r?.status || ''} al registrar`);
       } else {
-        setError('Error de red al registrar');
+        toast('error', 'Error de red al registrar');
       }
+    } finally {
+      setSending(false);
     }
   }
 
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Registrar persona</h1>
-      <form onSubmit={(e) => void onSubmit(e)} className="flex max-w-lg flex-col gap-3 rounded bg-white p-4 shadow">
-        <input className="rounded border px-3 py-2" placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
-        <input className="rounded border px-3 py-2" placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
-        <input className="rounded border px-3 py-2" placeholder="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
-        <input className="rounded border px-3 py-2" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
-        <label className="text-sm">
-          Foto frente (JPEG/PNG/WEBP, máx. 5MB)
-          <input className="mt-1 block" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setFrente(e.target.files?.[0] || null)} required />
+      <form onSubmit={(e) => void onSubmit(e)} className="max-w-2xl mx-auto bg-white p-8 shadow-sm ring-1 ring-gray-900/5 rounded-xl flex flex-col gap-4">
+        <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+        <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+        <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+        <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-gray-700">Foto frente (JPEG/PNG/WEBP, máx. 5MB)</span>
+          <input
+            className={INPUT_CLASS}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setFrente(e.target.files?.[0] || null)}
+            required
+          />
         </label>
-        <label className="text-sm">
-          Foto dorso (JPEG/PNG/WEBP, máx. 5MB)
-          <input className="mt-1 block" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setDorso(e.target.files?.[0] || null)} required />
+        <label className="block text-sm">
+          <span className="mb-1 block font-medium text-gray-700">Foto dorso (JPEG/PNG/WEBP, máx. 5MB)</span>
+          <input
+            className={INPUT_CLASS}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setDorso(e.target.files?.[0] || null)}
+            required
+          />
         </label>
-        <button className="rounded bg-blue-600 px-4 py-2 text-white" type="submit">Registrar</button>
-        {mensaje && <p className="text-green-600">{mensaje}</p>}
-        {error && <p className="text-red-600">{error}</p>}
+        <Button type="submit" loading={sending}>Registrar</Button>
       </form>
     </div>
   );

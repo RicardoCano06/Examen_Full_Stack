@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { listarAuditoria, type RegistroAuditoria } from '../api/client';
+import Button from '../components/Button';
+import Table from '../components/Table';
+import { TableSkeleton } from '../components/Spinner';
+import { useToast } from '../components/Toast';
 
 function geoResumen(info: unknown): string {
   if (!info) return '—';
@@ -16,19 +20,22 @@ function geoResumen(info: unknown): string {
 }
 
 export default function Auditoria() {
+  const toast = useToast();
   const [filas, setFilas] = useState<RegistroAuditoria[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   async function cargar(p = page) {
+    setLoading(true);
     try {
-      setError('');
       const res = await listarAuditoria(p, 10);
       setFilas(res.data);
       setTotalPages(res.totalPages || 1);
     } catch {
-      setError('No se pudo cargar la auditoría');
+      toast('error', 'No se pudo cargar la auditoría');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -40,47 +47,38 @@ export default function Auditoria() {
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Auditoría de búsquedas</h1>
-      {error && <p className="mb-2 text-red-600">{error}</p>}
-      <table className="w-full rounded bg-white text-sm shadow">
-        <thead>
-          <tr className="border-b text-left">
-            <th className="p-2">Fecha</th>
-            <th className="p-2">Término</th>
-            <th className="p-2">Resultados</th>
-            <th className="p-2">IP</th>
-            <th className="p-2">Geo</th>
-            <th className="p-2">Telegram</th>
-          </tr>
-        </thead>
-        <tbody>
+      {loading ? (
+        <div className="w-full bg-white p-4 shadow-sm ring-1 ring-gray-900/5 rounded-xl"><TableSkeleton rows={6} cols={6} /></div>
+      ) : (
+        <Table headers={['Fecha', 'Término', 'Resultados', 'IP', 'Geo', 'Telegram']}>
           {filas.map((a) => (
-            <tr key={a.id} className="border-b">
-              <td className="p-2">{new Date(a.fecha_hora).toLocaleString()}</td>
-              <td className="p-2">{a.termino_buscado}</td>
-              <td className="p-2">{a.cantidad_resultados}</td>
-              <td className="p-2">{a.ip_origen}</td>
-              <td className="p-2">{geoResumen(a.info_geolocalizacion)}</td>
-              <td className="p-2">{a.notificacion_telegram_exitosa ? 'OK' : 'Fallo'}</td>
+            <tr key={a.id} className="border-b last:border-0">
+              <td className="p-3">{new Date(a.fecha_hora).toLocaleString()}</td>
+              <td className="p-3">{a.termino_buscado}</td>
+              <td className="p-3">{a.cantidad_resultados}</td>
+              <td className="p-3">{a.ip_origen}</td>
+              <td className="p-3">{geoResumen(a.info_geolocalizacion)}</td>
+              <td className="p-3">{a.notificacion_telegram_exitosa ? 'OK' : 'Fallo'}</td>
             </tr>
           ))}
-        </tbody>
-      </table>
+        </Table>
+      )}
       <div className="mt-4 flex items-center gap-2">
-        <button
-          className="rounded border px-3 py-1 disabled:opacity-50"
+        <Button
+          variant="secondary"
           disabled={page <= 1}
           onClick={() => { const n = page - 1; setPage(n); void cargar(n); }}
         >
           Anterior
-        </button>
-        <span>Página {page} de {totalPages}</span>
-        <button
-          className="rounded border px-3 py-1 disabled:opacity-50"
+        </Button>
+        <span className="text-sm">Página {page} de {totalPages}</span>
+        <Button
+          variant="secondary"
           disabled={page >= totalPages}
           onClick={() => { const n = page + 1; setPage(n); void cargar(n); }}
         >
           Siguiente
-        </button>
+        </Button>
       </div>
     </div>
   );

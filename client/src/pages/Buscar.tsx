@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { buscarPersonas, type Persona } from '../api/client';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import { useToast } from '../components/Toast';
 
 declare global {
   interface Window {
@@ -16,10 +19,11 @@ const SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY as string | undefined;
 // El token se solicita con el widget explícito UNA vez antes de buscar.
 // Nunca se solicita en cada pulsación de tecla.
 export default function Buscar() {
+  const toast = useToast();
   const [termino, setTermino] = useState('');
   const [token, setToken] = useState('');
   const [resultados, setResultados] = useState<Persona[]>([]);
-  const [error, setError] = useState('');
+  const [searching, setSearching] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string>('');
 
@@ -48,15 +52,15 @@ export default function Buscar() {
   }, []);
 
   async function onBuscar() {
-    setError('');
     if (termino.trim().length < 3) {
-      setError('Ingrese al menos 3 caracteres');
+      toast('error', 'Ingrese al menos 3 caracteres');
       return;
     }
     if (!token) {
-      setError('Complete el captcha antes de buscar');
+      toast('error', 'Complete el captcha antes de buscar');
       return;
     }
+    setSearching(true);
     try {
       const res = await buscarPersonas(termino.trim(), token);
       setResultados(res.resultados || []);
@@ -67,29 +71,29 @@ export default function Buscar() {
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const r = (err as { response?: { status?: number; data?: { error?: string } } }).response;
-        setError(r?.data?.error || `Error ${r?.status || ''} en la búsqueda`);
+        toast('error', r?.data?.error || `Error ${r?.status || ''} en la búsqueda`);
       } else {
-        setError('Error de red en la búsqueda');
+        toast('error', 'Error de red en la búsqueda');
       }
+    } finally {
+      setSearching(false);
     }
   }
 
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold">Buscar personas</h1>
-      <div className="mb-4 flex max-w-lg flex-col gap-3 rounded bg-white p-4 shadow">
-        <input
-          className="rounded border px-3 py-2"
-          placeholder="Nombre, apellido o documento"
+      <div className="max-w-2xl mx-auto bg-white p-8 shadow-sm ring-1 ring-gray-900/5 rounded-xl flex flex-col gap-4">
+        <Input
+          label="Nombre, apellido o documento"
           value={termino}
           onChange={(e) => setTermino(e.target.value)}
         />
         {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
         <div ref={widgetRef} />
-        <button className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50" onClick={() => void onBuscar()} disabled={!token}>
+        <Button onClick={() => void onBuscar()} disabled={!token} loading={searching}>
           Buscar
-        </button>
-        {error && <p className="text-red-600">{error}</p>}
+        </Button>
       </div>
       <ul className="flex flex-col gap-2">
         {resultados.map((p) => (
