@@ -226,7 +226,7 @@ export default function PersonasList() {
                   <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
                 </span>
               </td>
-              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{puntosMiles(p.nro_documento)}</td>
+              <td className="px-4 py-2 text-sm text-slate-600">{puntosMiles(p.nro_documento)}</td>
               <td className="px-4 py-2 text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
               <td className="px-4 py-2 text-slate-600">{p.edad ?? '—'}</td>
               <td className="px-4 py-2">

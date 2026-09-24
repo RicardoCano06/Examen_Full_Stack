@@ -1,6 +1,7 @@
 // Formato es-PY: puntos de millar para documentos (40381719 -> 4.038.171).
+// Se eliminan ceros a la izquierda (01234567 -> 1.234.567).
 export function puntosMiles(valor: string): string {
-  const digitos = valor.replace(/\D/g, '');
+  const digitos = valor.replace(/\D/g, '').replace(/^0+/, '');
   if (!digitos) return valor;
   return digitos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }

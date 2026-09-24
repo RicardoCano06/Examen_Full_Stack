@@ -39,7 +39,7 @@ export default function DetalleContenido({ id }: { id: string }) {
           <dl className="grid flex-1 grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Documento</dt>
-              <dd className="mt-0.5 font-mono text-[13px] font-semibold text-slate-900">{puntosMiles(persona.nro_documento)}</dd>
+              <dd className="mt-0.5 text-sm font-semibold text-slate-900">{puntosMiles(persona.nro_documento)}</dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nacimiento</dt>
