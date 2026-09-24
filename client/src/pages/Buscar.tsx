@@ -82,8 +82,8 @@ export default function Buscar() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Buscar personas</h1>
-      <div className="max-w-2xl mx-auto bg-white p-8 shadow-sm ring-1 ring-gray-900/5 rounded-xl flex flex-col gap-4">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">Buscar personas</h1>
+      <div className="mx-auto flex max-w-2xl flex-col gap-4 rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
         <Input
           label="Nombre, apellido o documento"
           value={termino}
@@ -95,9 +95,9 @@ export default function Buscar() {
           Buscar
         </Button>
       </div>
-      <ul className="flex flex-col gap-2">
+      <ul className="mx-auto mt-4 flex max-w-2xl flex-col gap-2">
         {resultados.map((p) => (
-          <li key={p.id} className="rounded bg-white p-3 shadow">
+          <li key={p.id} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             {p.nombres} {p.apellidos} — {p.nro_documento} {p.edad !== undefined && `(edad: ${p.edad})`}
           </li>
         ))}

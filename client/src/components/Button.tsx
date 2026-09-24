@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 type Variant = 'primary' | 'secondary' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-600',
   secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400',
   danger: 'bg-white text-red-600 border border-red-200 hover:bg-red-50 focus:ring-red-400',
 };
@@ -18,7 +18,7 @@ export default function Button({ variant = 'primary', loading = false, disabled,
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 ${VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {loading && (

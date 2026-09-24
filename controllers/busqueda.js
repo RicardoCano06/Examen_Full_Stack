@@ -104,7 +104,7 @@ async function auditoriaEnSegundoPlano({ termino_buscado, cantidad_resultados, i
 
     const pais = geo && geo.country;
     const ciudad = geo && geo.city;
-    const fecha = new Date().toISOString();
+    const fecha = new Date().toLocaleString('es-PY', { timeZone: 'America/Asuncion' });
 
     let telegramOk = false;
     try {

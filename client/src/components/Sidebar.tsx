@@ -9,7 +9,7 @@ const LINKS = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-64 flex-shrink-0 flex-col bg-slate-900 text-slate-100">
+    <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col bg-slate-950 text-slate-100">
       <div className="px-5 py-5">
         <p className="text-lg font-bold tracking-tight">Examen Full Stack</p>
         <p className="text-xs text-slate-400">Backoffice</p>

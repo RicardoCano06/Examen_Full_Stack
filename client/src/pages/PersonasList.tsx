@@ -6,6 +6,15 @@ import Table from '../components/Table';
 import { TableSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
 
+// Solo fecha (es-PY), sin hora: se parsea el YYYY-MM-DD como fecha local
+// para evitar que el UTC del ISO reste un día en America/Asuncion.
+function soloFecha(iso: string): string {
+  const base = iso.slice(0, 10);
+  const [y, m, d] = base.split('-').map(Number);
+  if (!y || !m || !d) return base;
+  return new Date(y, m - 1, d).toLocaleDateString('es-PY');
+}
+
 export default function PersonasList() {
   const toast = useToast();
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -60,7 +69,7 @@ export default function PersonasList() {
             <tr key={p.id} className="border-b last:border-0">
               <td className="p-3">{p.nombres} {p.apellidos}</td>
               <td className="p-3">{p.nro_documento}</td>
-              <td className="p-3">{p.fecha_nacimiento}</td>
+              <td className="p-3">{soloFecha(p.fecha_nacimiento)}</td>
               <td className="p-3">{p.edad ?? '—'}</td>
               <td className="p-3">
                 <button className="text-sm text-red-600 hover:underline" onClick={() => void onEliminar(p.id)}>
