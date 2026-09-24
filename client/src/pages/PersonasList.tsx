@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { buscarPersonas, eliminarPersona, listarPersonas, type Persona } from '../api/client';
 import ActionsMenu from '../components/ActionsMenu';
 import Avatar from '../components/Avatar';
@@ -12,6 +11,7 @@ import EmptyState from '../components/EmptyState';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
+import RegistrarForm from '../components/RegistrarForm';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
@@ -45,6 +45,7 @@ export default function PersonasList() {
   const [loading, setLoading] = useState(true);
   const [verId, setVerId] = useState<string | null>(null);
   const [editarId, setEditarId] = useState<string | null>(null);
+  const [nuevaAbierta, setNuevaAbierta] = useState(false);
   const seq = useRef(0);
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string>('');
@@ -165,9 +166,12 @@ export default function PersonasList() {
         breadcrumb={['Inicio', 'Personas']}
         description="Registro de personas con documento de identidad"
         actions={
-          <Link to="/registrar">
-            <Button>Nueva persona</Button>
-          </Link>
+          <Button onClick={() => setNuevaAbierta(true)}>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Nueva persona
+          </Button>
         }
       />
       <Card className="mb-4 p-4">
@@ -210,9 +214,7 @@ export default function PersonasList() {
             modo === 'search' ? (
               <Button variant="secondary" onClick={onLimpiar}>Limpiar búsqueda</Button>
             ) : (
-              <Link to="/registrar">
-                <Button>Registrar persona</Button>
-              </Link>
+              <Button onClick={() => setNuevaAbierta(true)}>Registrar persona</Button>
             )
           }
         />
@@ -275,8 +277,17 @@ export default function PersonasList() {
           </p>
         )
       )}
-      {verId && (
-        <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
+      {nuevaAbierta && (
+        <Modal title="Registrar persona" onClose={() => setNuevaAbierta(false)} wide>
+          <RegistrarForm
+            onSaved={() => {
+              setNuevaAbierta(false);
+              void volverABrowse();
+            }}
+          />
+        </Modal>
+      )}
+      {verId && (        <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
           <DetalleContenido id={verId} />
         </Modal>
       )}

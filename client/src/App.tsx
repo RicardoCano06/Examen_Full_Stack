@@ -1,7 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import PersonasList from './pages/PersonasList';
-import Registrar from './pages/Registrar';
 import Detalle from './pages/Detalle';
 import Editar from './pages/Editar';
 import Auditoria from './pages/Auditoria';
@@ -13,7 +12,6 @@ export default function App() {
       <main className="flex-1 p-8 overflow-y-auto">
         <Routes>
           <Route path="/" element={<PersonasList />} />
-          <Route path="/registrar" element={<Registrar />} />
           <Route path="/personas/:id" element={<Detalle />} />
           <Route path="/editar/:id" element={<Editar />} />
           <Route path="/auditoria" element={<Auditoria />} />

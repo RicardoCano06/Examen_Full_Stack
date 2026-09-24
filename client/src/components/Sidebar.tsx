@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 
 const SECTIONS: { titulo: string; links: { to: string; label: string; end?: boolean }[] }[] = [
-  { titulo: 'Gestión', links: [{ to: '/', label: 'Personas', end: true }, { to: '/registrar', label: 'Registrar' }] },
+  { titulo: 'Gestión', links: [{ to: '/', label: 'Personas', end: true }] },
   { titulo: 'Sistema', links: [{ to: '/auditoria', label: 'Auditoría' }] },
 ];
 
