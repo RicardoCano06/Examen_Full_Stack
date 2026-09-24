@@ -11,6 +11,7 @@ router.post('/', uploadPersonaFiles, personas.create);
 router.post('/buscar', busqueda.buscar);
 router.get('/', personas.list);
 router.get('/:id', personas.getById);
+router.put('/:id', uploadPersonaFiles, personas.update);
 router.delete('/:id', personas.remove);
 
 module.exports = router;

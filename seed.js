@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('fs/promises');
 const path = require('path');
+const zlib = require('zlib');
 const { v4: uuidv4 } = require('uuid');
 const { fakerES, faker: fakerEN } = require('@faker-js/faker');
 const pool = require('./db');
@@ -11,11 +12,64 @@ const TOTAL = 500;
 const BATCH_SIZE = 50;
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
-// PNG válido de 1x1 (placeholder) en base64 convertido a Buffer.
-// Solo Buffer + base64, sin dependencias gráficas pesadas: el mismo buffer se reutiliza.
-const SAMPLE_PNG_BASE64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-const SAMPLE_IMAGE = Buffer.from(SAMPLE_PNG_BASE64, 'base64');
+// Placeholder gráfico 240x180 generado por código (fondo gris, marco y franjas),
+// construido como PNG válido solo con zlib de Node: sin dependencias gráficas.
+// El mismo buffer se reutiliza en las 1000 imágenes del seed.
+function crc32(buf) {
+  let table = crc32.t;
+  if (!table) {
+    table = crc32.t = [];
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      table[n] = c >>> 0;
+    }
+  }
+  let crc = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) crc = table[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const td = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(td));
+  return Buffer.concat([len, td, crc]);
+}
+
+function buildPlaceholder() {
+  const W = 240;
+  const H = 180;
+  const raw = Buffer.alloc((W * 3 + 1) * H);
+  for (let y = 0; y < H; y++) {
+    raw[y * (W * 3 + 1)] = 0; // byte de filtro: ninguno
+    for (let x = 0; x < W; x++) {
+      const o = y * (W * 3 + 1) + 1 + x * 3;
+      const border = x < 6 || y < 6 || x >= W - 6 || y >= H - 6;
+      const stripe = ((x + y) >> 4) % 2 === 0;
+      let v = stripe ? 205 : 228;
+      if (border) v = 110;
+      raw[o] = v;
+      raw[o + 1] = v;
+      raw[o + 2] = v;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(W, 0);
+  ihdr.writeUInt32BE(H, 4);
+  ihdr[8] = 8; // profundidad de color
+  ihdr[9] = 2; // color verdadero RGB
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlib.deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+const SAMPLE_IMAGE = buildPlaceholder();
 
 function fechaNacimientoPasada() {
   const d = faker.date.birthdate({ min: 18, max: 90, mode: 'age' });

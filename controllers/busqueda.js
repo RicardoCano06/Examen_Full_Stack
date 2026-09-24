@@ -93,11 +93,21 @@ async function auditoriaEnSegundoPlano({ termino_buscado, cantidad_resultados, i
     let geo = null;
     try {
       const geoRes = await fetchWithTimeout(
-        `http://ip-api.com/json/${encodeURIComponent(ip_origen)}?fields=status,message,country,city,query`,
+        `http://ip-api.com/json/${encodeURIComponent(ip_origen)}?fields=status,message,country,city,isp,org,lat,lon,query`,
         {},
         GEO_TIMEOUT_MS
       );
-      geo = await geoRes.json().catch(() => null);
+      if (!geoRes.ok) {
+        // 429 (límite gratuito superado) u otro HTTP: se registra el motivo y se sigue.
+        geo = { status: 'fail', message: `geolocalización HTTP ${geoRes.status}` };
+      } else {
+        const data = await geoRes.json().catch(() => null);
+        // IPs privadas/locales o cuota excedida devuelven status != success: no son útiles,
+        // pero el motivo queda almacenado en el registro crudo.
+        geo = data && data.status === 'success'
+          ? data
+          : { status: 'fail', message: (data && data.message) || 'sin datos útiles para esta IP' };
+      }
     } catch {
       geo = null;
     }

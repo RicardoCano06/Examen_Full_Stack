@@ -27,6 +27,20 @@ app.use('/api/personas', personasRoutes);
 // Historial de auditoría de búsquedas (paginado, fecha descendente).
 app.use('/api/auditoria', auditoriaRoutes);
 
+// Visualización segura de imágenes: solo nombres uuid + extensión validada,
+// con Content-Type imagen (nunca ejecutable) y sin directory traversal.
+app.get('/uploads/:file', (req, res) => {
+  const f = req.params.file;
+  if (!/^[0-9a-fA-F-]{36}\.(png|jpg|webp)$/.test(f)) {
+    return res.status(404).json({ error: 'Recurso no encontrado' });
+  }
+  const mime = f.endsWith('.png') ? 'image/png' : f.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+  res.type(mime);
+  res.sendFile(path.join(__dirname, 'uploads', f), (err) => {
+    if (err) res.status(404).json({ error: 'Recurso no encontrado' });
+  });
+});
+
 // Ruta no encontrada
 app.use((req, res) => {
   res.status(404).json({ error: 'Recurso no encontrado' });

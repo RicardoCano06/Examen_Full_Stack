@@ -106,7 +106,9 @@ cd client; npm install; npm run dev   # SPA en :5173 (proxy /api → :3000)
 | POST | `/api/personas` | `multipart` atómico; `409` si el documento existe |
 | GET | `/api/personas` | Paginado, edad derivada |
 | GET | `/api/personas/:id` | Detalle con edad derivada |
+| PUT | `/api/personas/:id` | Edición atómica (fotos opcionales, reemplazo por lado) |
 | DELETE | `/api/personas/:id` | Borra registro y archivos (`ENOENT` tolerado) |
+| GET | `/uploads/:uuid.png` | Imagen con `Content-Type` imagen (regex estricta, sin traversal) |
 | POST | `/api/personas/buscar` | Requiere `captcha_token`; `403` si falla |
 | GET | `/api/auditoria` | Historial paginado, fecha descendente |
 
@@ -121,8 +123,11 @@ traversal. Este enfoque mantiene a PostgreSQL ligero y es suficiente para una
 instancia única evaluable.
 
 **Desventajas asumidas**: no escala horizontalmente (el disco es local a una
-máquina), no hay CDN ni redimensionado, el backup mezcla BD + archivos y las
-imágenes no se sirven públicamente (la API hoy solo devuelve rutas).
+máquina), no hay CDN ni redimensionado, y el backup mezcla BD + archivos.
+
+**Visualización**: `GET /uploads/:file` solo acepta nombres `uuid.png|jpg|webp`,
+responde siempre `Content-Type: image/*` (nunca ejecutable), rechaza traversal
+con `404` y el detalle de persona muestra frente/dorso en tarjetas.
 
 **Cambiaría el enfoque** ante un segundo servidor, despliegue en contenedores
 efímeros o necesidad de servir imágenes al público: migraría a almacenamiento
@@ -168,11 +173,15 @@ junto a la geolocalización cruda (`jsonb`) y el flag
 
 Ambas llamadas llevan timeout estricto de 3 s con `AbortController` y corren
 **después** de responder `200` al cliente (fire and forget), por lo que una
-demora externa jamás cuelga la búsqueda. Si `ip-api.com` falla, la geografía
-se registra como desconocida; si Telegram falla o no hay credenciales,
-`notificacion_telegram_exitosa` queda en `false`. La fila de auditoría se
-inserta de todos modos y cualquier excepción se limita a `console.error` sin
-tocar la respuesta ya enviada.
+demora externa jamás cuelga la búsqueda. Se solicitan país, ciudad, proveedor,
+organización y coordenadas (`country,city,isp,org,lat,lon`). Si `ip-api.com`
+devuelve HTTP distinto de 2xx (p. ej. `429` por cuota gratuita superada),
+`status != success` (IPs privadas/locales sin datos útiles) o la red falla, el
+motivo queda almacenado en el `jsonb` crudo y la geografía se informa como
+desconocida; no hay reintentos para no agravar el límite. Si Telegram falla o
+no hay credenciales, `notificacion_telegram_exitosa` queda en `false`. La fila
+de auditoría se inserta de todos modos y cualquier excepción se limita a
+`console.error` sin tocar la respuesta ya enviada.
 
 ## 13. Política de retención de datos
 
@@ -186,10 +195,9 @@ de volumen para análisis de tráfico.
 
 Por tiempo quedaron fuera: autenticación y roles, rate limiting en
 `POST /api/personas/buscar` más allá del captcha, suite de tests automatizados,
-servido público de imágenes (hoy la API devuelve rutas, no archivos),
 migraciones versionadas del esquema y observabilidad (logs estructurados,
 métricas). Con más plazo, el orden sería: tests del flujo atómico y del
-fire-and-forget, rate limiting por IP, servicio de archivos con URLs firmadas
+fire-and-forget, rate limiting por IP con backoff ante el `429` de ip-api,
 y migración del storage a S3 cuando haya más de una instancia.
 
 ## 15. Scripts disponibles

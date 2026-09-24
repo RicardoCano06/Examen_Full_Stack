@@ -42,6 +42,11 @@ export async function eliminarPersona(id: string) {
   return data;
 }
 
+export async function obtenerPersona(id: string) {
+  const { data } = await api.get<Persona>(`/personas/${id}`);
+  return data;
+}
+
 export async function buscarPersonas(termino: string, captcha_token: string) {
   const { data } = await api.post('/personas/buscar', { termino, captcha_token });
   return data as { resultados: Persona[]; cantidad_resultados: number };

@@ -216,4 +216,122 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { create, list, getById, remove };
+// PUT /api/personas/:id — edición atómica:
+// 1) valida texto, 2) valida magic bytes de las fotos nuevas en memoria,
+// 3) UPDATE, 4) solo entonces escribe archivos nuevos y borra los reemplazados.
+async function update(req, res, next) {
+  const reemplazadas = [];
+  try {
+    const sel = await pool.query(
+      `SELECT id, nombres, apellidos, nro_documento, fecha_nacimiento,
+              ruta_foto_frente, ruta_foto_dorso
+       FROM personas WHERE id = $1`,
+      [req.params.id]
+    );
+    if (sel.rows.length === 0) {
+      throw httpError(404, 'Persona no encontrada');
+    }
+    const actual = sel.rows[0];
+
+    const nombres = pick(req.body, 'nombres');
+    const apellidos = pick(req.body, 'apellidos');
+    const nro_documento = pick(req.body, 'nro_documento', 'documento');
+    const fecha_nacimiento = pick(req.body, 'fecha_nacimiento', 'fechaNacimiento');
+
+    if (!nombres || !apellidos || !nro_documento || !fecha_nacimiento) {
+      throw httpError(400, 'Faltan datos obligatorios: nombres, apellidos, documento y fecha de nacimiento');
+    }
+    if (!isValidDateOnly(fecha_nacimiento)) {
+      throw httpError(400, 'Fecha de nacimiento inválida (use YYYY-MM-DD)');
+    }
+    if (isFutureDateOnly(fecha_nacimiento)) {
+      throw httpError(400, 'Fecha de nacimiento no puede ser futura');
+    }
+
+    // Fotos opcionales e independientes: solo se reemplaza el lado enviado.
+    const nuevaFrente = req.files && req.files.foto_frente && req.files.foto_frente[0];
+    const nuevoDorso = req.files && req.files.foto_dorso && req.files.foto_dorso[0];
+
+    let rutaFrente = actual.ruta_foto_frente;
+    let rutaDorso = actual.ruta_foto_dorso;
+    let nombreFrente = null;
+    let nombreDorso = null;
+
+    if (nuevaFrente) {
+      const tipo = await validateImageBuffer(nuevaFrente.buffer);
+      nombreFrente = `${uuidv4()}${tipo.ext}`;
+      rutaFrente = `uploads/${nombreFrente}`;
+    }
+    if (nuevoDorso) {
+      const tipo = await validateImageBuffer(nuevoDorso.buffer);
+      nombreDorso = `${uuidv4()}${tipo.ext}`;
+      rutaDorso = `uploads/${nombreDorso}`;
+    }
+
+    let row;
+    try {
+      const result = await pool.query(
+        `UPDATE personas SET nombres = $1, apellidos = $2, nro_documento = $3,
+               fecha_nacimiento = $4, ruta_foto_frente = $5, ruta_foto_dorso = $6
+         WHERE id = $7
+         RETURNING id, nombres, apellidos, nro_documento, fecha_nacimiento, ruta_foto_frente, ruta_foto_dorso`,
+        [nombres, apellidos, nro_documento, fecha_nacimiento, rutaFrente, rutaDorso, req.params.id]
+      );
+      row = result.rows[0];
+    } catch (dbErr) {
+      if (dbErr && dbErr.code === '23505') {
+        throw httpError(409, 'El número de documento ya existe');
+      }
+      throw dbErr;
+    }
+
+    // Solo tras el UPDATE exitoso se escriben los archivos nuevos.
+    try {
+      await fs.mkdir(UPLOADS_DIR, { recursive: true });
+      const escrituras = [];
+      if (nombreFrente) escrituras.push(fs.writeFile(path.join(UPLOADS_DIR, nombreFrente), nuevaFrente.buffer));
+      if (nombreDorso) escrituras.push(fs.writeFile(path.join(UPLOADS_DIR, nombreDorso), nuevoDorso.buffer));
+      await Promise.all(escrituras);
+    } catch (fsErr) {
+      // Compensación: se revierte el UPDATE a las rutas anteriores.
+      try {
+        await pool.query(
+          'UPDATE personas SET ruta_foto_frente = $1, ruta_foto_dorso = $2 WHERE id = $3',
+          [actual.ruta_foto_frente, actual.ruta_foto_dorso, req.params.id]
+        );
+      } catch {
+        // Se ignora: el error original de disco es lo relevante para el log interno.
+      }
+      if (nombreFrente) reemplazadas.push(nombreFrente);
+      if (nombreDorso) reemplazadas.push(nombreDorso);
+      throw fsErr;
+    }
+
+    // Recién ahora se borran las fotos reemplazadas (best-effort).
+    const obsoletas = [];
+    if (nombreFrente) obsoletas.push(actual.ruta_foto_frente);
+    if (nombreDorso) obsoletas.push(actual.ruta_foto_dorso);
+    for (const ruta of obsoletas) {
+      const abs = resolveUploadPath(ruta);
+      if (!abs) continue;
+      try {
+        await fs.unlink(abs);
+      } catch (e) {
+        if (e && e.code !== 'ENOENT') console.error('No se pudo eliminar archivo:', abs, e.message);
+      }
+    }
+
+    return res.json(row);
+  } catch (err) {
+    for (const nombre of reemplazadas) {
+      try {
+        await fs.unlink(path.join(UPLOADS_DIR, nombre));
+      } catch {
+        // Limpieza parcial best-effort
+      }
+    }
+    return next(err);
+  }
+}
+
+module.exports = { create, list, getById, update, remove };

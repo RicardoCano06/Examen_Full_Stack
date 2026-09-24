@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { eliminarPersona, listarPersonas, type Persona } from '../api/client';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -72,9 +73,13 @@ export default function PersonasList() {
               <td className="p-3">{soloFecha(p.fecha_nacimiento)}</td>
               <td className="p-3">{p.edad ?? '—'}</td>
               <td className="p-3">
-                <button className="text-sm text-red-600 hover:underline" onClick={() => void onEliminar(p.id)}>
-                  Eliminar
-                </button>
+                <span className="flex gap-2 text-sm">
+                  <Link className="text-blue-600 hover:underline" to={`/personas/${p.id}`}>Ver</Link>
+                  <Link className="text-blue-600 hover:underline" to={`/editar/${p.id}`}>Editar</Link>
+                  <button className="text-red-600 hover:underline" onClick={() => void onEliminar(p.id)}>
+                    Eliminar
+                  </button>
+                </span>
               </td>
             </tr>
           ))}
