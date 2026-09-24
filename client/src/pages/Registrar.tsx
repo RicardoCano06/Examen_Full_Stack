@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import Input, { INPUT_CLASS } from '../components/Input';
+import FileDrop from '../components/FileDrop';
+import Input from '../components/Input';
 import PageHeader from '../components/PageHeader';
 import { useToast } from '../components/Toast';
 
@@ -37,7 +38,7 @@ export default function Registrar() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!frente || !dorso) {
-      toast('error', 'Debe adjuntar foto_frente y foto_dorso');
+      toast('error', 'Debe adjuntar las fotos de frente y dorso');
       return;
     }
     // Un único FormData con textos + 2 archivos en la misma petición POST.
@@ -71,10 +72,10 @@ export default function Registrar() {
       <PageHeader
         title="Registrar persona"
         breadcrumb={['Inicio', 'Personas', 'Registrar']}
-        description="Alta atómica: datos y ambas fotos en una sola petición"
+        description="Complete los datos y adjunte ambas fotos del documento"
       />
       <form onSubmit={(e) => void onSubmit(e)}>
-        <Card className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
+        <Card className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-400" aria-hidden="true">
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -85,38 +86,24 @@ export default function Registrar() {
             </span>
             <div>
               <p className="font-semibold text-slate-900">Nuevo registro</p>
-              <p className="text-sm text-slate-500">Complete todos los campos obligatorios</p>
+              <p className="text-sm text-slate-500">Todos los campos son obligatorios</p>
             </div>
           </div>
           <Seccion titulo="Datos personales">
-            <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
-            <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input label="Nro. documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+              <Input label="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+              <Input label="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input label="Nro. de documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
               <Input label="Fecha de nacimiento" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
             </div>
           </Seccion>
-          <Seccion titulo="Documento de identidad">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Foto frente · JPEG/PNG/WEBP · máx. 5 MB</span>
-              <input
-                className={INPUT_CLASS}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => setFrente(e.target.files?.[0] || null)}
-                required
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Foto dorso · JPEG/PNG/WEBP · máx. 5 MB</span>
-              <input
-                className={INPUT_CLASS}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => setDorso(e.target.files?.[0] || null)}
-                required
-              />
-            </label>
+          <Seccion titulo="Fotos del documento">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FileDrop label="Foto frente" file={frente} onChange={setFrente} required />
+              <FileDrop label="Foto dorso" file={dorso} onChange={setDorso} required />
+            </div>
           </Seccion>
           <Button type="submit" loading={sending}>Registrar persona</Button>
         </Card>

@@ -61,7 +61,7 @@ La edad nunca se almacena: se deriva en SQL con
 └── client/                 # Frontend Vite + React + TS + Tailwind
     ├── src/api/            # Cliente Axios
     ├── src/components/     # Button, Input, Table, Sidebar, Toast, Spinner
-    └── src/pages/          # PersonasList, Registrar, Buscar, Auditoria
+    └── src/pages/          # PersonasList, Registrar, Detalle, Editar, Auditoria
 ```
 
 ## 4. Requisitos previos
@@ -104,13 +104,13 @@ cd client; npm install; npm run dev   # SPA en :5173 (proxy /api → :3000)
 |---|---|---|
 | GET | `/health` | Estado del servicio |
 | POST | `/api/personas` | `multipart` atómico; `409` si el documento existe |
-| GET | `/api/personas` | Paginado, edad derivada |
+| GET | `/api/personas` | Navegación paginada; `?search=` → `400` (toda búsqueda exige captcha) |
 | GET | `/api/personas/:id` | Detalle con edad derivada |
 | PUT | `/api/personas/:id` | Edición atómica (fotos opcionales, reemplazo por lado) |
 | DELETE | `/api/personas/:id` | Borra registro y archivos (`ENOENT` tolerado) |
 | GET | `/uploads/:uuid.png` | Imagen con `Content-Type` imagen (regex estricta, sin traversal) |
 | POST | `/api/personas/buscar` | Requiere `captcha_token`; `403` si falla |
-| GET | `/api/auditoria` | Historial paginado, fecha descendente |
+| GET | `/api/auditoria` | Historial paginado DESC + filtros `q`, `desde`, `hasta` |
 
 Los errores `500` son genéricos: nunca exponen trazas ni rutas internas.
 
@@ -145,18 +145,21 @@ el origen de la petición.
 
 ## 10. Captcha: mecanismo, validación y por qué no es eludible
 
-Se usa **Cloudflare Turnstile** con widget explícito: el token se solicita una
-vez antes de pulsar "Buscar", nunca por cada tecla. El frontend envía
+Se usa **Cloudflare Turnstile** con widget explícito integrado en la barra de
+búsqueda del listado: el token se solicita una vez antes de pulsar "Buscar",
+nunca por cada tecla (los tokens son de un solo uso, por lo que no existe
+búsqueda en vivo: sería incompatible con el modelo anti-bot). El frontend envía
 `{ termino, captcha_token }` por `POST` (no viajan en la URL ni quedan en
 logs). El backend verifica cada token contra
 `challenges.cloudflare.com/turnstile/v0/siteverify` con el `CAPTCHA_SECRET`
 del servidor; si la verificación falla o falta el token, responde `403` antes
 de buscar.
 
-**No puede eludirse llamando al endpoint directamente** porque la validación
-ocurre en el servidor en cada petición: sin un token válido y de un solo uso
-emitido por Cloudflare para ese sitio, la búsqueda nunca se ejecuta. Omitir el
-widget solo produce `403`.
+**No existe bypass**: `GET /api/personas` es solo navegación paginada y
+rechaza con `400` cualquier parámetro `search`. La única vía de filtrado es
+`POST /api/personas/buscar` con captcha válido, y cada ejecución queda
+auditada. Llamar a cualquier endpoint directamente sin token produce
+`400`/`403`, nunca datos filtrados.
 
 ## 11. Telegram: qué se envía, qué se omite y por qué
 

@@ -4,7 +4,6 @@ import PersonasList from './pages/PersonasList';
 import Registrar from './pages/Registrar';
 import Detalle from './pages/Detalle';
 import Editar from './pages/Editar';
-import Buscar from './pages/Buscar';
 import Auditoria from './pages/Auditoria';
 
 export default function App() {
@@ -17,7 +16,6 @@ export default function App() {
           <Route path="/registrar" element={<Registrar />} />
           <Route path="/personas/:id" element={<Detalle />} />
           <Route path="/editar/:id" element={<Editar />} />
-          <Route path="/buscar" element={<Buscar />} />
           <Route path="/auditoria" element={<Auditoria />} />
         </Routes>
       </main>

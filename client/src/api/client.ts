@@ -52,7 +52,13 @@ export async function buscarPersonas(termino: string, captcha_token: string) {
   return data as { resultados: Persona[]; cantidad_resultados: number };
 }
 
-export async function listarAuditoria(page = 1, limit = 10) {
-  const { data } = await api.get<Pagina<RegistroAuditoria>>('/auditoria', { params: { page, limit } });
+export interface FiltrosAuditoria {
+  q?: string;
+  desde?: string;
+  hasta?: string;
+}
+
+export async function listarAuditoria(page = 1, limit = 10, filtros: FiltrosAuditoria = {}) {
+  const { data } = await api.get<Pagina<RegistroAuditoria>>('/auditoria', { params: { page, limit, ...filtros } });
   return data;
 }

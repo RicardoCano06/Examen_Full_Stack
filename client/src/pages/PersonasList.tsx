@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { eliminarPersona, listarPersonas, type Persona } from '../api/client';
+import { buscarPersonas, eliminarPersona, listarPersonas, type Persona } from '../api/client';
+import ActionsMenu from '../components/ActionsMenu';
 import Avatar from '../components/Avatar';
+import Badge from '../components/Badge';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import DetalleContenido from '../components/DetalleContenido';
@@ -13,35 +15,46 @@ import PageHeader from '../components/PageHeader';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
 import { useToast } from '../components/Toast';
+import { puntosMiles, soloFecha } from '../utils/format';
 
-// Solo fecha (es-PY), sin hora: se parsea el YYYY-MM-DD como fecha local
-// para evitar que el UTC del ISO reste un día en America/Asuncion.
-function soloFecha(iso: string): string {
-  const base = iso.slice(0, 10);
-  const [y, m, d] = base.split('-').map(Number);
-  if (!y || !m || !d) return base;
-  return new Date(y, m - 1, d).toLocaleDateString('es-PY');
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (el: HTMLElement, opts: { sitekey: string; callback: (token: string) => void }) => string;
+      reset?: (id?: string) => void;
+    };
+    onTurnstileLoad?: () => void;
+  }
 }
 
+const SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY as string | undefined;
+
+// Búsqueda única del sistema: el filtro por término SIEMPRE exige captcha
+// verificado en el servidor (POST /api/personas/buscar). Sin token no hay
+// búsqueda, ni desde la UI ni llamando a la API directamente.
 export default function PersonasList() {
   const toast = useToast();
   const [personas, setPersonas] = useState<Persona[]>([]);
+  const [resultados, setResultados] = useState<Persona[]>([]);
+  const [modo, setModo] = useState<'browse' | 'search'>('browse');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
+  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(true);
-  const PAGE_SIZE = 10;
   const [verId, setVerId] = useState<string | null>(null);
   const [editarId, setEditarId] = useState<string | null>(null);
   const seq = useRef(0);
-  const ultimoBuscado = useRef<string | null>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string>('');
+  const PAGE_SIZE = 10;
 
-  async function cargar(p = page, q = search) {
+  async function cargar(p = page) {
     const mi = ++seq.current;
     setLoading(true);
     try {
-      const res = await listarPersonas(p, PAGE_SIZE, q);
+      const res = await listarPersonas(p, PAGE_SIZE);
       if (seq.current !== mi) return; // respuesta vieja: se descarta
       setPersonas(res.data);
       setTotalPages(res.totalPages || 1);
@@ -55,33 +68,95 @@ export default function PersonasList() {
   }
 
   useEffect(() => {
-    // Sin cambio real de término (p. ej. remontaje de StrictMode en dev): no refiltrar.
-    if (ultimoBuscado.current === search) return;
-    if (search === '' && ultimoBuscado.current === null) {
-      ultimoBuscado.current = '';
-      void cargar(1, '');
+    void cargar(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Widget Turnstile explícito: un token por búsqueda, nunca por tecla.
+  useEffect(() => {
+    if (!SITEKEY) return;
+    const renderWidget = () => {
+      if (widgetRef.current && window.turnstile && !widgetId.current) {
+        widgetId.current = window.turnstile.render(widgetRef.current, {
+          sitekey: SITEKEY,
+          callback: (t: string) => setToken(t),
+        });
+      }
+    };
+    if (window.turnstile) {
+      renderWidget();
       return;
     }
-    // Búsqueda en vivo: al escribir se filtra solo tras 400 ms de pausa.
-    const t = window.setTimeout(() => {
-      ultimoBuscado.current = search;
-      setPage(1);
-      void cargar(1, search);
-    }, 400);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+    window.onTurnstileLoad = renderWidget;
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      window.onTurnstileLoad = undefined;
+    };
+  }, []);
+
+  function resetCaptcha() {
+    setToken('');
+    window.turnstile?.reset?.(widgetId.current || undefined);
+    widgetId.current = '';
+  }
+
+  async function onBuscar() {
+    if (search.trim().length < 3) {
+      toast('error', 'Ingrese al menos 3 caracteres');
+      return;
+    }
+    if (!token) {
+      toast('error', 'Complete el captcha antes de buscar');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await buscarPersonas(search.trim(), token);
+      setResultados(res.resultados || []);
+      setModo('search');
+      resetCaptcha();
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const r = (err as { response?: { status?: number; data?: { error?: string } } }).response;
+        toast('error', r?.data?.error || `Error ${r?.status || ''} en la búsqueda`);
+      } else {
+        toast('error', 'Error de red en la búsqueda');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function onLimpiar() {
+    setSearch('');
+    setModo('browse');
+    setPage(1);
+    void cargar(1);
+  }
+
+  async function volverABrowse() {
+    setModo('browse');
+    setSearch('');
+    setPage(1);
+    await cargar(1);
+  }
 
   async function onEliminar(id: string) {
     if (!window.confirm('¿Eliminar esta persona y sus imágenes?')) return;
     try {
       await eliminarPersona(id);
       toast('success', 'Persona eliminada');
-      await cargar(page, search);
+      await volverABrowse();
     } catch {
       toast('error', 'No se pudo eliminar');
     }
   }
+
+  const filas = modo === 'search' ? resultados : personas;
+  const HEADERS = ['Persona', 'Documento', 'Nacimiento', 'Edad', 'Fotos', 'Acciones'];
 
   return (
     <div>
@@ -96,27 +171,45 @@ export default function PersonasList() {
         }
       />
       <Card className="mb-4 p-4">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Input placeholder="Buscar por nombre o documento" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex flex-col gap-3">
+          <Input
+            placeholder="Buscar por nombre, apellido o documento (mín. 3 caracteres)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') void onBuscar(); }}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
+            <div ref={widgetRef} />
+            <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'}>
+              Buscar
+            </Button>
+            {modo === 'search' && (
+              <Button variant="secondary" onClick={onLimpiar}>
+                Limpiar
+              </Button>
+            )}
           </div>
-          <Button variant="secondary" onClick={() => { ultimoBuscado.current = search; setPage(1); void cargar(1, search); }}>Buscar</Button>
         </div>
       </Card>
       {loading ? (
-        <TableCardSkeleton headers={['Persona', 'Documento', 'Nacimiento', 'Edad', 'Acciones']} rows={10} avatar />
-      ) : personas.length === 0 ? (
+        <TableCardSkeleton headers={HEADERS} rows={10} avatar />
+      ) : filas.length === 0 ? (
         <EmptyState
-          message="Sin resultados para los criterios indicados."
+          message={modo === 'search' ? 'Sin resultados para ese término.' : 'Aún no hay personas registradas.'}
           action={
-            <Link to="/registrar">
-              <Button>Registrar persona</Button>
-            </Link>
+            modo === 'search' ? (
+              <Button variant="secondary" onClick={onLimpiar}>Limpiar búsqueda</Button>
+            ) : (
+              <Link to="/registrar">
+                <Button>Registrar persona</Button>
+              </Link>
+            )
           }
         />
       ) : (
-        <Table headers={['Persona', 'Documento', 'Nacimiento', 'Edad', 'Acciones']}>
-          {personas.map((p) => (
+        <Table headers={HEADERS}>
+          {filas.map((p) => (
             <tr key={p.id} className="transition-colors hover:bg-slate-50/70">
               <td className="px-4 py-2">
                 <span className="flex items-center gap-3">
@@ -124,46 +217,55 @@ export default function PersonasList() {
                   <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.nombres} {p.apellidos}</button></span>
                 </span>
               </td>
-              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{p.nro_documento}</td>
+              <td className="px-4 py-2 font-mono text-[13px] text-slate-600">{puntosMiles(p.nro_documento)}</td>
               <td className="px-4 py-2 text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
               <td className="px-4 py-2 text-slate-600">{p.edad ?? '—'}</td>
               <td className="px-4 py-2">
-                <span className="flex gap-3 text-sm">
-                  <button className="font-medium text-slate-600 hover:text-slate-900" onClick={() => setVerId(p.id)}>
-                    Ver
-                  </button>
-                  <button className="font-medium text-slate-600 hover:text-slate-900" onClick={() => setEditarId(p.id)}>
-                    Editar
-                  </button>
-                  <button className="font-medium text-red-600 hover:text-red-800" onClick={() => void onEliminar(p.id)}>
-                    Eliminar
-                  </button>
-                </span>
+                <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'slate'}>
+                  {p.ruta_foto_frente && p.ruta_foto_dorso ? 'OK' : '—'}
+                </Badge>
+              </td>
+              <td className="px-4 py-2 text-right">
+                <ActionsMenu
+                  items={[
+                    { label: 'Ver', onSelect: () => setVerId(p.id) },
+                    { label: 'Editar', onSelect: () => setEditarId(p.id) },
+                    { label: 'Eliminar', tone: 'danger', onSelect: () => void onEliminar(p.id) },
+                  ]}
+                />
               </td>
             </tr>
           ))}
         </Table>
       )}
-      <div className="mt-4 flex items-center gap-3">
-        <Button
-          variant="secondary"
-          disabled={page <= 1}
-          onClick={() => { const n = page - 1; setPage(n); void cargar(n, search); }}
-        >
-          Anterior
-        </Button>
-        <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
-        <span className="text-sm text-slate-400">
-          Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
-        </span>
-        <Button
-          variant="secondary"
-          disabled={page >= totalPages}
-          onClick={() => { const n = page + 1; setPage(n); void cargar(n, search); }}
-        >
-          Siguiente
-        </Button>
-      </div>
+      {modo === 'browse' ? (
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            variant="secondary"
+            disabled={page <= 1}
+            onClick={() => { const n = page - 1; setPage(n); void cargar(n); }}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
+          <span className="text-sm text-slate-400">
+            Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
+          </span>
+          <Button
+            variant="secondary"
+            disabled={page >= totalPages}
+            onClick={() => { const n = page + 1; setPage(n); void cargar(n); }}
+          >
+            Siguiente
+          </Button>
+        </div>
+      ) : (
+        !loading && (
+          <p className="mt-4 text-sm text-slate-500">
+            {resultados.length} resultado{resultados.length === 1 ? '' : 's'} de búsqueda auditada.
+          </p>
+        )
+      )}
       {verId && (
         <Modal title="Detalle de persona" onClose={() => setVerId(null)} wide>
           <DetalleContenido id={verId} />
@@ -175,7 +277,7 @@ export default function PersonasList() {
             id={editarId}
             onSaved={() => {
               setEditarId(null);
-              void cargar(page, search);
+              void volverABrowse();
             }}
           />
         </Modal>

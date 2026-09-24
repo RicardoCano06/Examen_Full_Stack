@@ -8,8 +8,8 @@ export default function Editar() {
 
   return (
     <div>
-      <PageHeader title="Editar persona" description="Modificación atómica con reemplazo opcional de fotos" />
-      <div className="mx-auto max-w-2xl rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-900/5">
+      <PageHeader title="Editar persona" description="Actualice los datos o reemplace las fotos del documento" />
+      <div className="mx-auto max-w-3xl rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-900/5">
         <EditarForm id={id} onSaved={() => navigate(`/personas/${id}`)} />
       </div>
     </div>

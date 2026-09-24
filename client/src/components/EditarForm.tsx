@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, obtenerPersona } from '../api/client';
 import Button from './Button';
-import Input, { INPUT_CLASS } from './Input';
+import FileDrop from './FileDrop';
+import Input from './Input';
 import { Spinner } from './Spinner';
 import { useToast } from './Toast';
 
@@ -83,24 +84,10 @@ export default function EditarForm({ id, onSaved }: { id: string; onSaved: () =>
         </div>
       </Seccion>
       <Seccion titulo="Reemplazo de fotos (opcional)">
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Frente · se conserva la actual si se omite</span>
-          <input
-            className={INPUT_CLASS}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setFrente(e.target.files?.[0] || null)}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Dorso · se conserva la actual si se omite</span>
-          <input
-            className={INPUT_CLASS}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => setDorso(e.target.files?.[0] || null)}
-          />
-        </label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FileDrop label="Frente · se conserva la actual si se omite" file={frente} onChange={setFrente} />
+          <FileDrop label="Dorso · se conserva la actual si se omite" file={dorso} onChange={setDorso} />
+        </div>
       </Seccion>
       <Button type="submit" loading={sending}>Guardar cambios</Button>
     </form>

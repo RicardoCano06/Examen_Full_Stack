@@ -125,34 +125,29 @@ async function create(req, res, next) {
   }
 }
 
-// GET /api/personas — listado paginado con edad calculada al vuelo (no almacenada).
+// GET /api/personas — solo navegación paginada (CRUD).
+// El filtrado por término está PROHIBIDO aquí: toda búsqueda debe pasar por
+// POST /api/personas/buscar con captcha verificado (requisito anti-bot).
 async function list(req, res, next) {
   try {
+    if (String(req.query.search || '').trim() !== '') {
+      throw httpError(400, 'La búsqueda requiere verificación anti-automatización');
+    }
     const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || '10', 10) || 10));
     const offset = (page - 1) * limit;
-    const search = (req.query.search || '').trim();
 
-    const where = [];
-    const params = [];
-    if (search) {
-      params.push(`%${search}%`);
-      where.push(`(nombres ILIKE $${params.length} OR apellidos ILIKE $${params.length} OR nro_documento ILIKE $${params.length})`);
-    }
-    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-    const countResult = await pool.query(`SELECT COUNT(*)::int AS total FROM personas ${whereSql}`, params);
+    const countResult = await pool.query('SELECT COUNT(*)::int AS total FROM personas');
     const total = countResult.rows[0].total;
 
-    const dataParams = [...params, limit, offset];
     const dataResult = await pool.query(
       `SELECT id, nombres, apellidos, nro_documento, fecha_nacimiento,
               ruta_foto_frente, ruta_foto_dorso,
               DATE_PART('year', AGE(fecha_nacimiento))::int AS edad
-       FROM personas ${whereSql}
+       FROM personas
        ORDER BY apellidos, nombres
-       LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`,
-      dataParams
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
     return res.json({
