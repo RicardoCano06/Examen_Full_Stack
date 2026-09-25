@@ -20,9 +20,9 @@ export default function Topbar() {
   const { titulo, subtitulo } = tituloPorRuta(pathname);
 
   return (
-    <header className="border-b border-slate-200 bg-white px-8 py-4">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white px-8 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        {saludo()}, ING. RICARDO CANO
+        {saludo()}, RICARDO CANO
       </p>
       <div className="mt-1 flex items-center gap-3">
         <span className="inline-grid grid-cols-2 gap-0.5 text-blue-600" aria-hidden="true">
