@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
+import Pagination from '../components/Pagination';
 import RegistrarForm from '../components/RegistrarForm';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
@@ -259,26 +260,15 @@ export default function PersonasList() {
         </Table>
       )}
       {modo === 'browse' ? (
-        <div className="mt-4 flex items-center gap-3">
-          <Button
-            variant="secondary"
-            disabled={page <= 1}
-            onClick={() => { const n = page - 1; setPage(n); void cargar(n); }}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
-          <span className="text-sm text-slate-400">
-            Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
-          </span>
-          <Button
-            variant="secondary"
-            disabled={page >= totalPages}
-            onClick={() => { const n = page + 1; setPage(n); void cargar(n); }}
-          >
-            Siguiente
-          </Button>
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          counter={`Mostrando ${total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} de ${total}`}
+          onFirst={() => { setPage(1); void cargar(1); }}
+          onPrev={() => { const n = page - 1; setPage(n); void cargar(n); }}
+          onNext={() => { const n = page + 1; setPage(n); void cargar(n); }}
+          onLast={() => { setPage(totalPages); void cargar(totalPages); }}
+        />
       ) : (
         !loading && (
           <p className="mt-4 text-sm text-slate-500">

@@ -6,6 +6,7 @@ import FechaInput from '../components/FechaInput';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
+import Pagination from '../components/Pagination';
 import StatusDot from '../components/StatusDot';
 import Table from '../components/Table';
 import { TableCardSkeleton } from '../components/Spinner';
@@ -114,6 +115,18 @@ export default function Auditoria() {
         <div className="flex gap-2 self-end">
           <Button onClick={onFiltrar} className="h-10">Filtrar</Button>
           <Button variant="secondary" onClick={onLimpiar} className="h-10">Limpiar</Button>
+          <Button
+            variant="secondary"
+            onClick={() => void cargar(page, { q, desde, hasta })}
+            aria-label="Actualizar"
+            title="Actualizar"
+            className="h-10"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <path d="M21 3v6h-6" />
+            </svg>
+          </Button>
         </div>
       </div>
       {loading ? (
@@ -149,26 +162,15 @@ export default function Auditoria() {
           ))}
         </Table>
       )}
-      <div className="mt-4 flex items-center gap-3">
-        <Button
-          variant="secondary"
-          disabled={page <= 1}
-          onClick={() => { const n = page - 1; setPage(n); void cargar(n); }}
-        >
-          Anterior
-        </Button>
-        <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
-        <span className="text-sm text-slate-400">
-          Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
-        </span>
-        <Button
-          variant="secondary"
-          disabled={page >= totalPages}
-          onClick={() => { const n = page + 1; setPage(n); void cargar(n); }}
-        >
-          Siguiente
-        </Button>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        counter={`Mostrando ${total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} de ${total}`}
+        onFirst={() => { setPage(1); void cargar(1); }}
+        onPrev={() => { const n = page - 1; setPage(n); void cargar(n); }}
+        onNext={() => { const n = page + 1; setPage(n); void cargar(n); }}
+        onLast={() => { setPage(totalPages); void cargar(totalPages); }}
+      />
       {detalle && (
         <Modal title="Detalle técnico de la consulta" onClose={() => setDetalle(null)} wide>
           <dl className="mb-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
