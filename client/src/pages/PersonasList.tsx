@@ -172,16 +172,6 @@ export default function PersonasList() {
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
-        <Button onClick={() => setNuevaAbierta(true)}>
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M19 8v6M22 11h-6" />
-          </svg>
-          Nuevo registro
-        </Button>
-      </div>
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="w-full max-w-md">
             <Input
@@ -211,6 +201,15 @@ export default function PersonasList() {
               Limpiar
             </Button>
           )}
+          <span className="flex-1" aria-hidden="true" />
+          <Button onClick={() => setNuevaAbierta(true)} className="h-10">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M19 8v6M22 11h-6" />
+            </svg>
+            Nuevo registro
+          </Button>
       </div>
       {loading ? (
         <TableCardSkeleton headers={HEADERS} rows={10} avatar />
