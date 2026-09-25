@@ -7,7 +7,7 @@ const SECTIONS: { titulo: string; links: { to: string; label: string; end?: bool
 
 export default function Sidebar() {
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col bg-white text-slate-700">
+    <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white text-slate-700">
       <div className="flex items-center gap-3 px-5 py-5">
         <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white" aria-hidden="true">
           EC
