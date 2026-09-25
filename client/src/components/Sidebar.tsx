@@ -9,8 +9,8 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white text-slate-700">
       <div className="flex items-center gap-3 px-5 py-5">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white" aria-hidden="true">
-          EC
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 font-serif text-sm font-bold tracking-wide text-white" aria-hidden="true">
+          RC
         </span>
         <div>
           <p className="text-sm font-semibold tracking-tight text-slate-900">Examen Full Stack</p>
