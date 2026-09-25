@@ -170,7 +170,6 @@ export default function PersonasList() {
     <div>
       <PageHeader
         title="Personas"
-        breadcrumb={['Inicio', 'Personas']}
         description="Registro de personas con documento de identidad"
         actions={
           <Button onClick={() => setNuevaAbierta(true)}>
@@ -239,7 +238,7 @@ export default function PersonasList() {
               <td className="px-4 py-2 text-center text-sm text-slate-600">{p.edad ?? '—'}</td>
               <td className="px-4 py-2 text-center">
                 <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'slate'}>
-                  {p.ruta_foto_frente && p.ruta_foto_dorso ? 'OK' : '—'}
+                  {p.ruta_foto_frente && p.ruta_foto_dorso ? 'Completo' : '—'}
                 </Badge>
               </td>
               <td className="px-4 py-2 text-center">

@@ -92,11 +92,10 @@ export default function Auditoria() {
     <div>
       <PageHeader
         title="Auditoría de búsquedas"
-        breadcrumb={['Inicio', 'Auditoría']}
         description="Trazabilidad de consultas por IP y notificación"
       />
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="min-w-0 flex-1 basis-64">
+        <div className="w-full max-w-md">
           <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} />
         </div>
         <div className="w-40">
