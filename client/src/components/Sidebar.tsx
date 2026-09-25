@@ -40,17 +40,6 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="mt-auto border-t border-slate-200 px-5 py-4">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white" aria-hidden="true">
-            IC
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Ing. Ricardo Cano</p>
-            <p className="text-xs text-slate-500">Administrador General</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
