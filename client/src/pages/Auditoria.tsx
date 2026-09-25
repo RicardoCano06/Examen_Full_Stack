@@ -5,7 +5,6 @@ import EmptyState from '../components/EmptyState';
 import FechaInput from '../components/FechaInput';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
-import PageHeader from '../components/PageHeader';
 import Pagination from '../components/Pagination';
 import StatusDot from '../components/StatusDot';
 import Table from '../components/Table';
@@ -98,10 +97,6 @@ export default function Auditoria() {
 
   return (
     <div>
-      <PageHeader
-        title="Auditoría"
-        description="Trazabilidad de consultas por IP y notificación"
-      />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="w-full max-w-md">
           <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} />
