@@ -164,7 +164,7 @@ export default function PersonasList() {
   }
 
   const filas = modo === 'search' ? resultados : personas;
-  const HEADERS = ['Persona', 'Documento', 'Nacimiento', 'Edad', 'Fotos', { label: 'Acciones', center: true }];
+  const HEADERS = ['Nombre completo', 'Nro. documento', 'Fecha de nacimiento', 'Edad', 'Documentación', { label: 'Acciones', center: true }];
 
   return (
     <div>

@@ -12,7 +12,7 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   );
 }
 
-export function TableCardSkeleton({ headers, rows = 10, avatar = false }: { headers: Header[]; rows?: number; avatar?: boolean }) {
+export function TableCardSkeleton({ headers, rows = 10, avatar = false, widths }: { headers: Header[]; rows?: number; avatar?: boolean; widths?: string[] }) {
   return (
     <Table headers={headers}>
       {Array.from({ length: rows }).map((_, i) => (
@@ -25,7 +25,7 @@ export function TableCardSkeleton({ headers, rows = 10, avatar = false }: { head
                   <span className="h-4 flex-1 rounded bg-slate-200" />
                 </span>
               ) : (
-                <div className="h-4 rounded bg-slate-200" />
+                <div className={`h-4 rounded bg-slate-200 ${widths?.[j] || 'w-full'}${typeof h !== 'string' && h.center ? ' mx-auto' : ''}`} />
               )}
             </td>
           ))}

@@ -39,7 +39,7 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
-const HEADERS = ['Fecha', { label: 'Término', center: true }, { label: 'Resultados', center: true }, { label: 'IP origen', center: true }, { label: 'Geolocalización', center: true }, { label: 'Telegram', center: true }];
+const HEADERS = ['Fecha y hora', { label: 'Término buscado', center: true }, { label: 'Cant. resultados', center: true }, { label: 'IP origen', center: true }, { label: 'Ubicación', center: true }, { label: 'Telegram', center: true }];
 
 export default function Auditoria() {
   const toast = useToast();
@@ -111,7 +111,7 @@ export default function Auditoria() {
         </div>
       </div>
       {loading ? (
-        <TableCardSkeleton headers={HEADERS} rows={15} />
+        <TableCardSkeleton headers={HEADERS} rows={15} widths={['w-44', 'w-32', 'w-10', 'w-32', 'w-36', 'w-24']} />
       ) : filas.length === 0 ? (
         <EmptyState message="Sin eventos para los filtros indicados." />
       ) : (
