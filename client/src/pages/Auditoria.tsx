@@ -96,7 +96,7 @@ export default function Auditoria() {
   return (
     <div>
       <PageHeader
-        title="Auditoría de búsquedas"
+        title="Auditoría"
         description="Trazabilidad de consultas por IP y notificación"
       />
       <div className="mb-4 flex flex-wrap items-end gap-3">
