@@ -31,7 +31,8 @@ React. Las decisiones centrales son la **atomicidad del registro** (texto +
 archivos en una sola petición, sin endpoint aislado de subida) y la
 **búsqueda no bloqueante** (respuesta inmediata + auditoría fire and forget).
 La edad nunca se almacena: se deriva en SQL con
-`DATE_PART('year', AGE(fecha_nacimiento))`.
+`DATE_PART('year', AGE(fecha_nacimiento))`; `AGE()` es calendario-exacto
+(cumpleaños y 29 de febrero correctos) sin lógica en el cliente.
 
 ## 2. Stack tecnológico y justificación
 
@@ -109,7 +110,7 @@ cd client; npm install; npm run dev   # SPA en :5173 (proxy /api → :3000)
 | PUT | `/api/personas/:id` | Edición atómica (fotos opcionales, reemplazo por lado) |
 | DELETE | `/api/personas/:id` | Borra registro y archivos (`ENOENT` tolerado) |
 | GET | `/uploads/:uuid.png` | Imagen con `Content-Type` imagen (regex estricta, sin traversal) |
-| POST | `/api/personas/buscar` | Requiere `captcha_token`; `403` si falla |
+| POST | `/api/personas/buscar` | Requiere `captcha_token` (`403` si falla); término 3–100 alfanumérico (`400` si no); tope fijo de 20 (`SEARCH_LIMIT` constante del backend, nunca del cliente) |
 | GET | `/api/auditoria` | Historial paginado DESC + filtros `q`, `desde`, `hasta` |
 
 Los errores `500` son genéricos: nunca exponen trazas ni rutas internas.
