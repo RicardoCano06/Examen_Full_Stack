@@ -181,10 +181,10 @@ export default function PersonasList() {
           </Button>
         }
       />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="min-w-0 flex-1 basis-64">
             <Input
-              placeholder="Nombre, apellido o documento (mín. 3 caracteres)"
+              label="Buscar por nombre, apellido o documento"
               value={search}
               maxLength={100}
               onChange={(e) => {
@@ -201,12 +201,12 @@ export default function PersonasList() {
             />
           </div>
           {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
-          <div ref={widgetRef} />
-          <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'}>
+          <div ref={widgetRef} className="self-center" />
+          <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'} className="h-10">
             Buscar
           </Button>
           {modo === 'search' && (
-            <Button variant="secondary" onClick={onLimpiar}>
+            <Button variant="secondary" onClick={onLimpiar} className="h-10">
               Limpiar
             </Button>
           )}

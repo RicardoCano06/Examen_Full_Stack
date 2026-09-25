@@ -105,9 +105,9 @@ export default function Auditoria() {
         <div className="w-40">
           <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
         </div>
-        <div className="flex gap-2">
-          <Button onClick={onFiltrar}>Filtrar</Button>
-          <Button variant="secondary" onClick={onLimpiar}>Limpiar</Button>
+        <div className="flex gap-2 self-end">
+          <Button onClick={onFiltrar} className="h-10">Filtrar</Button>
+          <Button variant="secondary" onClick={onLimpiar} className="h-10">Limpiar</Button>
         </div>
       </div>
       {loading ? (
