@@ -182,7 +182,7 @@ export default function PersonasList() {
         }
       />
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="min-w-0 flex-1 basis-64">
+        <div className="w-full max-w-md">
             <Input
               label="Buscar por nombre, apellido o documento"
               value={search}
@@ -201,7 +201,7 @@ export default function PersonasList() {
             />
           </div>
           {!SITEKEY && <p className="text-sm text-amber-600">Falta VITE_TURNSTILE_SITEKEY en el .env del frontend.</p>}
-          <div ref={widgetRef} className="self-center" />
+          <div ref={widgetRef} style={{ width: 300, height: 65 }} />
           <Button onClick={() => void onBuscar()} disabled={!token} loading={loading && modo === 'search'} className="h-10">
             Buscar
           </Button>
