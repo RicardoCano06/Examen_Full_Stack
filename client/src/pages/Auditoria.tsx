@@ -39,7 +39,12 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
-const HEADERS = ['Fecha y hora', { label: 'Término buscado', center: true }, { label: 'Cant. resultados', center: true }, { label: 'IP origen', center: true }, { label: 'Ubicación', center: true }, { label: 'Telegram', center: true }];
+function proveedorDe(info: unknown): string {
+  const g = parseGeo(info);
+  return (g && (g.isp || g.org)) || '—';
+}
+
+const HEADERS = ['Fecha y hora', { label: 'Término buscado', center: true }, { label: 'Cant. resultados', center: true }, { label: 'IP origen', center: true }, { label: 'Proveedor', center: true }, { label: 'Ubicación', center: true }, { label: 'Telegram', center: true }];
 
 export default function Auditoria() {
   const toast = useToast();
@@ -110,7 +115,7 @@ export default function Auditoria() {
         </div>
       </div>
       {loading ? (
-        <TableCardSkeleton headers={HEADERS} rows={15} widths={['w-44', 'w-32', 'w-10', 'w-32', 'w-36', 'w-24']} />
+        <TableCardSkeleton headers={HEADERS} rows={15} widths={['w-44', 'w-32', 'w-10', 'w-32', 'w-36', 'w-36', 'w-24']} />
       ) : filas.length === 0 ? (
         <EmptyState message="Sin eventos para los filtros indicados." />
       ) : (
@@ -128,10 +133,11 @@ export default function Auditoria() {
               className="cursor-pointer transition-colors hover:bg-slate-50 focus:outline-none focus:bg-slate-50"
             >
               <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
-              <td className="px-4 py-2 text-center text-sm font-semibold text-slate-900">{a.termino_buscado}</td>
+              <td className="px-4 py-2 text-center text-sm font-semibold text-slate-900" title={a.termino_buscado}><span className="block truncate">{a.termino_buscado}</span></td>
               <td className={`px-4 py-2 text-center text-sm ${a.cantidad_resultados === 0 ? 'text-slate-400' : 'font-medium text-slate-700'}`}>{a.cantidad_resultados}</td>
               <td className="px-4 py-2 text-center text-sm text-slate-600">{a.ip_origen}</td>
-              <td className="px-4 py-2 text-center text-sm text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
+              <td className="px-4 py-2 text-center text-sm text-slate-600" title={proveedorDe(a.info_geolocalizacion)}><span className="block truncate">{proveedorDe(a.info_geolocalizacion)}</span></td>
+              <td className="px-4 py-2 text-center text-sm text-slate-600" title={geoResumen(a.info_geolocalizacion)}><span className="block truncate">{geoResumen(a.info_geolocalizacion)}</span></td>
               <td className="px-4 py-2 text-center">
                 <StatusDot tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
                   {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
