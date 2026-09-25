@@ -164,7 +164,7 @@ export default function PersonasList() {
   }
 
   const filas = modo === 'search' ? resultados : personas;
-  const HEADERS = ['Nombre completo', 'Nro. documento', 'Fecha de nacimiento', 'Edad', 'Documentación', { label: 'Acciones', center: true }];
+  const HEADERS = ['Nombre completo', { label: 'Nro. documento', center: true }, { label: 'Fecha de nacimiento', center: true }, { label: 'Edad', center: true }, { label: 'Documentación', center: true }, { label: 'Acciones', center: true }];
 
   return (
     <div>
@@ -234,10 +234,10 @@ export default function PersonasList() {
                   <span className="font-semibold text-slate-900"><button className="hover:text-slate-700 hover:underline" onClick={() => setVerId(p.id)}>{p.apellidos}, {p.nombres}</button></span>
                 </span>
               </td>
-              <td className="px-4 py-2 text-sm text-slate-600">{puntosMiles(p.nro_documento)}</td>
-              <td className="px-4 py-2 text-sm text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
-              <td className="px-4 py-2 text-sm text-slate-600">{p.edad ?? '—'}</td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2 text-center text-sm text-slate-600">{puntosMiles(p.nro_documento)}</td>
+              <td className="px-4 py-2 text-center text-sm text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
+              <td className="px-4 py-2 text-center text-sm text-slate-600">{p.edad ?? '—'}</td>
+              <td className="px-4 py-2 text-center">
                 <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'slate'}>
                   {p.ruta_foto_frente && p.ruta_foto_dorso ? 'OK' : '—'}
                 </Badge>
