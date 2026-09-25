@@ -52,11 +52,12 @@ export default function Auditoria() {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [detalle, setDetalle] = useState<RegistroAuditoria | null>(null);
+  const PAGE_SIZE = 15;
 
   async function cargar(p = page, filtros = { q, desde, hasta }) {
     setLoading(true);
     try {
-      const res = await listarAuditoria(p, 15, filtros);
+      const res = await listarAuditoria(p, PAGE_SIZE, filtros);
       setFilas(res.data);
       setTotalPages(res.totalPages || 1);
       setTotal(res.total || 0);
@@ -92,7 +93,7 @@ export default function Auditoria() {
       <PageHeader
         title="Auditoría de búsquedas"
         breadcrumb={['Inicio', 'Auditoría']}
-        description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
+        description="Trazabilidad de consultas por IP y notificación"
       />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="min-w-0 flex-1 basis-64">
@@ -150,6 +151,9 @@ export default function Auditoria() {
           Anterior
         </Button>
         <span className="text-sm text-slate-500">Página {page} de {totalPages}</span>
+        <span className="text-sm text-slate-400">
+          Mostrando {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} de {total}
+        </span>
         <Button
           variant="secondary"
           disabled={page >= totalPages}
