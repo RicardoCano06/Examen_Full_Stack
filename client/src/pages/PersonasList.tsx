@@ -92,10 +92,14 @@ export default function PersonasList() {
       return;
     }
     window.onTurnstileLoad = renderWidget;
-    const script = document.createElement('script');
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
-    script.async = true;
-    document.body.appendChild(script);
+    // No duplicar el <script>: en StrictMode/remontajes ya puede existir.
+    if (!document.querySelector('script[data-turnstile]')) {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
+      script.async = true;
+      script.dataset.turnstile = 'true';
+      document.body.appendChild(script);
+    }
     return () => {
       window.onTurnstileLoad = undefined;
     };
@@ -237,8 +241,8 @@ export default function PersonasList() {
               <td className="px-4 py-2 text-center text-sm text-slate-600">{soloFecha(p.fecha_nacimiento)}</td>
               <td className="px-4 py-2 text-center text-sm text-slate-600">{p.edad ?? '—'}</td>
               <td className="px-4 py-2 text-center">
-                <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'slate'}>
-                  {p.ruta_foto_frente && p.ruta_foto_dorso ? 'Completo' : '—'}
+                <Badge tone={p.ruta_foto_frente && p.ruta_foto_dorso ? 'green' : 'amber'}>
+                  {p.ruta_foto_frente && p.ruta_foto_dorso ? 'Completo' : 'Incompleto'}
                 </Badge>
               </td>
               <td className="px-4 py-2 text-center">

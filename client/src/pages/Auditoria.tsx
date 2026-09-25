@@ -198,7 +198,7 @@ export default function Auditoria() {
             </div>
           </dl>
           <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Respuesta cruda de geolocalización</p>
-          <pre className="max-h-64 overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs text-slate-100">
+          <pre className="max-h-64 overflow-auto rounded-lg bg-slate-50 p-4 font-mono text-xs text-slate-900 ring-1 ring-slate-900/10">
             {JSON.stringify(parseGeo(detalle.info_geolocalizacion), null, 2) || 'sin datos'}
           </pre>
         </Modal>
