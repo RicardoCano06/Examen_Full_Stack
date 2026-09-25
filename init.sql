@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS personas (
 -- Tabla: auditoria_busquedas
 CREATE TABLE IF NOT EXISTS auditoria_busquedas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
+    fecha_hora TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     termino_buscado VARCHAR,
     cantidad_resultados INTEGER,
     ip_origen VARCHAR,

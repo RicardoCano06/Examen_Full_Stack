@@ -39,6 +39,8 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
+const FMT_HORA = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false } as const;
+
 function proveedorDe(info: unknown): string {
   const g = parseGeo(info);
   return (g && (g.isp || g.org)) || '—';
@@ -132,7 +134,7 @@ export default function Auditoria() {
               tabIndex={0}
               className="cursor-pointer transition-colors hover:bg-slate-50 focus:outline-none focus:bg-slate-50"
             >
-              <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
+              <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY', FMT_HORA)}</td>
               <td className="px-4 py-2 text-center text-sm font-semibold text-slate-900" title={a.termino_buscado}><span className="block truncate">{a.termino_buscado}</span></td>
               <td className={`px-4 py-2 text-center text-sm ${a.cantidad_resultados === 0 ? 'text-slate-400' : 'font-medium text-slate-700'}`}>{a.cantidad_resultados}</td>
               <td className="px-4 py-2 text-center text-sm text-slate-600">{a.ip_origen}</td>
@@ -172,7 +174,7 @@ export default function Auditoria() {
           <dl className="mb-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Fecha</dt>
-              <dd className="mt-0.5 font-semibold text-slate-900">{new Date(detalle.fecha_hora).toLocaleString('es-PY')}</dd>
+              <dd className="mt-0.5 font-semibold text-slate-900">{new Date(detalle.fecha_hora).toLocaleString('es-PY', FMT_HORA)}</dd>
             </div>
             <div>
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Término</dt>

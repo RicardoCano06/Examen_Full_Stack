@@ -136,12 +136,20 @@ lectura) y un worker de miniaturas.
 
 ## 9. IP del visitante detrás del túnel
 
-Se lee estrictamente desde `CF-Connecting-IP`, cabecera inyectada por la
-infraestructura de Cloudflare Tunnel y no por el cliente. `X-Forwarded-For` se
-ignora por completo porque cualquier visitante puede falsificarla. Solo como
-respaldo para desarrollo local se usa `req.socket.remoteAddress`. Es confiable
-detrás del túnel precisamente porque el valor lo fija el borde de la red, no
-el origen de la petición.
+Se lee con patrón trusted-proxy, en este orden:
+
+1. `CF-Connecting-IP` (inyectada por Cloudflare Tunnel, no falsificable).
+2. Si el TCP viene del agente del túnel en localhost (ngrok/cloudflared en la
+   misma máquina), se confía en la **última** entrada de `X-Forwarded-For` (la
+   agregada por el borde del túnel). La primera se ignora porque el cliente
+   puede falsificarla.
+3. Conexión directa: `X-Forwarded-For` se ignora por completo y se usa la IP
+   del socket. Solo desarrollo local usa `remoteAddress` como respaldo.
+
+Es confiable porque el valor considerado siempre lo fija infraestructura (el
+borde del túnel o el propio socket TCP), nunca el cliente. Nota práctica: en
+pruebas locales la IP es privada y `ip-api` responde `fail`; el registro queda
+guardado igual con el motivo, y Telegram informa "desconocido".
 
 ## 10. Captcha: mecanismo, validación y por qué no es eludible
 
@@ -182,9 +190,11 @@ junto a la geolocalización cruda (`jsonb`) y el flag
 
 ## 12. Fallos de geolocalización o Telegram
 
-Ambas llamadas llevan timeout estricto de 3 s con `AbortController` y corren
+Ambas llamadas llevan timeout estricto de 3 s y corren
 **después** de responder `200` al cliente (fire and forget), por lo que una
-demora externa jamás cuelga la búsqueda. Se solicitan país, ciudad, proveedor,
+demora externa jamás cuelga la búsqueda. La capa HTTP resuelve solo IPv4
+(`dns.lookup family 4` + SNI): en redes con IPv6 roto, el `fetch` nativo
+dual-stack se cuelga intentando la ruta IPv6. Se solicitan país, ciudad, proveedor,
 organización y coordenadas (`country,city,isp,org,lat,lon`). Si `ip-api.com`
 devuelve HTTP distinto de 2xx (p. ej. `429` por cuota gratuita superada),
 `status != success` (IPs privadas/locales sin datos útiles) o la red falla, el

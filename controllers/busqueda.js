@@ -1,4 +1,7 @@
 const pool = require('../db');
+const dns = require('dns').promises;
+const http = require('http');
+const https = require('https');
 
 const TURNSTILE_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const GEO_TIMEOUT_MS = 3000;
@@ -17,14 +20,33 @@ function httpError(statusCode, message) {
 // IP blindada: SOLO CF-Connecting-IP (inyectada por Cloudflare Tunnel).
 // Ignora por completo x-forwarded-for (falsificable por el cliente).
 // Fallback a req.socket.remoteAddress solo para pruebas locales.
+function esLoopback(ip) {
+  return ip === '127.0.0.1' || ip === '::1';
+}
+
+// IP blindada con patrón trusted-proxy:
+// 1. CF-Connecting-IP (inyectada por Cloudflare, no falsificable por el cliente).
+// 2. Si el TCP viene del agente del túnel en localhost (ngrok/cloudflared en la
+//    misma máquina), X-Forwarded-For lo escribió el borde del túnel: se toma la
+//    ÚLTIMA entrada (la agregada por el edge). La primera se ignora porque el
+//    cliente puede falsificarla.
+// 3. Conexión directa: XFF se ignora por completo (cualquiera puede forjarla).
+// 4. Fallback local para desarrollo.
 function getClientIp(req) {
   const cf = req.headers && req.headers['cf-connecting-ip'];
-  if (typeof cf === 'string' && cf.trim() !== '') return normalizeIp(cf.trim());
+  if (typeof cf === 'string' && cf.trim() !== '') return sanitizarIp(normalizeIp(cf.trim()));
   if (Array.isArray(cf) && cf.length && String(cf[0]).trim() !== '') {
-    return normalizeIp(String(cf[0]).trim());
+    return sanitizarIp(normalizeIp(String(cf[0]).trim()));
   }
-  const sock = req.socket && req.socket.remoteAddress;
-  if (typeof sock === 'string' && sock.trim() !== '') return normalizeIp(sock.trim());
+  const sockRaw = req.socket && req.socket.remoteAddress;
+  const sock = typeof sockRaw === 'string' && sockRaw.trim() !== '' ? normalizeIp(sockRaw.trim()) : '';
+  const xff = req.headers && req.headers['x-forwarded-for'];
+  if (xff && sock && esLoopback(sock)) {
+    const partes = String(xff).split(',').map((s) => s.trim()).filter(Boolean);
+    const ultima = partes[partes.length - 1];
+    if (ultima) return sanitizarIp(normalizeIp(ultima));
+  }
+  if (sock) return sanitizarIp(sock);
   return 'desconocida';
 }
 
@@ -57,13 +79,57 @@ function validarTermino(termino) {
 }
 
 async function fetchWithTimeout(url, options = {}, ms = 3000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+  // IPv4 explícito: en redes con IPv6 roto, el fetch nativo (dual-stack)
+  // se cuelga intentando la ruta IPv6. Se resuelve solo A y se conecta a
+  // la IP con SNI + Host del hostname original (el certificado valida igual).
+  const u = new URL(url);
+  const lib = u.protocol === 'https:' ? https : http;
+  const port = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;
+  const headers = { ...(options.headers || {}), Host: u.hostname };
+  const body = options.body != null ? String(options.body) : null;
+  if (body != null && headers['Content-Length'] == null && headers['content-length'] == null) {
+    headers['Content-Length'] = Buffer.byteLength(body);
   }
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const ok = (v) => { if (!done) { done = true; clearTimeout(timer); resolve(v); } };
+    const fail = (e) => { if (!done) { done = true; clearTimeout(timer); reject(e); } };
+    const timer = setTimeout(() => {
+      try { req.destroy(); } catch { /* ya cerrado */ }
+      fail(Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' }));
+    }, ms);
+    let req;
+    (async () => {
+      try {
+        const { address } = await dns.lookup(u.hostname, { family: 4 });
+        req = lib.request(
+          {
+            host: address,
+            port,
+            path: u.pathname + u.search,
+            method: options.method || 'GET',
+            servername: u.hostname,
+            headers,
+          },
+          (res) => {
+            let data = '';
+            res.on('data', (c) => { data += c; });
+            res.on('end', () => ok({
+              ok: res.statusCode >= 200 && res.statusCode < 300,
+              status: res.statusCode,
+              json: async () => JSON.parse(data),
+              text: async () => data,
+            }));
+          }
+        );
+        req.on('error', fail);
+        if (body != null) req.write(body);
+        req.end();
+      } catch (e) {
+        fail(e);
+      }
+    })();
+  });
 }
 
 // Validación síncrona (antes de buscar): si falla -> 403.
