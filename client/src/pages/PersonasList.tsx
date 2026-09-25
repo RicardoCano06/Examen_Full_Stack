@@ -19,7 +19,7 @@ import { puntosMiles, soloFecha } from '../utils/format';
 declare global {
   interface Window {
     turnstile?: {
-      render: (el: HTMLElement, opts: { sitekey: string; callback: (token: string) => void }) => string;
+      render: (el: HTMLElement, opts: { sitekey: string; callback: (token: string) => void; theme?: 'light' | 'dark' | 'auto'; size?: 'normal' | 'compact' }) => string;
       reset?: (id?: string) => void;
     };
     onTurnstileLoad?: () => void;
@@ -81,6 +81,8 @@ export default function PersonasList() {
       if (widgetRef.current && window.turnstile && !widgetId.current) {
         widgetId.current = window.turnstile.render(widgetRef.current, {
           sitekey: SITEKEY,
+          theme: 'light',
+          size: 'normal',
           callback: (t: string) => setToken(t),
         });
       }
