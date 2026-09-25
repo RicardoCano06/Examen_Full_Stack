@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { listarAuditoria, type RegistroAuditoria } from '../api/client';
 import Button from '../components/Button';
-import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import FechaInput from '../components/FechaInput';
 import Input from '../components/Input';
@@ -40,7 +39,7 @@ function geoResumen(info: unknown): string {
   return [g.country, g.city].filter(Boolean).join(' / ') || '—';
 }
 
-const HEADERS = ['Fecha', 'Término', 'Resultados', 'IP origen', 'Geolocalización', 'Telegram'];
+const HEADERS = ['Fecha', { label: 'Término', center: true }, { label: 'Resultados', center: true }, { label: 'IP origen', center: true }, { label: 'Geolocalización', center: true }, { label: 'Telegram', center: true }];
 
 export default function Auditoria() {
   const toast = useToast();
@@ -57,7 +56,7 @@ export default function Auditoria() {
   async function cargar(p = page, filtros = { q, desde, hasta }) {
     setLoading(true);
     try {
-      const res = await listarAuditoria(p, 10, filtros);
+      const res = await listarAuditoria(p, 15, filtros);
       setFilas(res.data);
       setTotalPages(res.totalPages || 1);
       setTotal(res.total || 0);
@@ -95,25 +94,23 @@ export default function Auditoria() {
         breadcrumb={['Inicio', 'Auditoría']}
         description={total > 0 ? `${total} eventos registrados · retención de 30 días` : 'Trazabilidad de consultas por IP y notificación'}
       />
-      <Card className="mb-4 p-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-0 flex-1 basis-64">
-            <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} />
-          </div>
-          <div className="w-40">
-            <FechaInput label="Desde" value={desde} onChange={setDesde} />
-          </div>
-          <div className="w-40">
-            <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={onFiltrar}>Filtrar</Button>
-            <Button variant="secondary" onClick={onLimpiar}>Limpiar</Button>
-          </div>
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="min-w-0 flex-1 basis-64">
+          <Input label="Término o IP" value={q} onChange={(e) => setQ(e.target.value)} maxLength={100} />
         </div>
-      </Card>
+        <div className="w-40">
+          <FechaInput label="Desde" value={desde} onChange={setDesde} />
+        </div>
+        <div className="w-40">
+          <FechaInput label="Hasta" value={hasta} onChange={setHasta} />
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={onFiltrar}>Filtrar</Button>
+          <Button variant="secondary" onClick={onLimpiar}>Limpiar</Button>
+        </div>
+      </div>
       {loading ? (
-        <TableCardSkeleton headers={HEADERS} rows={10} />
+        <TableCardSkeleton headers={HEADERS} rows={15} />
       ) : filas.length === 0 ? (
         <EmptyState message="Sin eventos para los filtros indicados." />
       ) : (
@@ -130,12 +127,12 @@ export default function Auditoria() {
               tabIndex={0}
               className="cursor-pointer transition-colors hover:bg-slate-50 focus:outline-none focus:bg-slate-50"
             >
-              <td className="whitespace-nowrap px-4 py-2 text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
-              <td className="px-4 py-2 text-sm font-semibold text-slate-900">{a.termino_buscado}</td>
+              <td className="whitespace-nowrap px-4 py-2 text-sm text-slate-600">{new Date(a.fecha_hora).toLocaleString('es-PY')}</td>
+              <td className="px-4 py-2 text-center text-sm font-semibold text-slate-900">{a.termino_buscado}</td>
               <td className={`px-4 py-2 text-center text-sm ${a.cantidad_resultados === 0 ? 'text-slate-400' : 'font-medium text-slate-700'}`}>{a.cantidad_resultados}</td>
-              <td className="px-4 py-2 text-sm text-slate-600">{a.ip_origen}</td>
-              <td className="px-4 py-2 text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
-              <td className="px-4 py-2">
+              <td className="px-4 py-2 text-center text-sm text-slate-600">{a.ip_origen}</td>
+              <td className="px-4 py-2 text-center text-sm text-slate-600">{geoResumen(a.info_geolocalizacion)}</td>
+              <td className="px-4 py-2 text-center">
                 <StatusDot tone={a.notificacion_telegram_exitosa ? 'green' : 'red'}>
                   {a.notificacion_telegram_exitosa ? 'Enviado' : 'Fallido'}
                 </StatusDot>

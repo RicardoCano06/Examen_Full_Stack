@@ -4,7 +4,6 @@ import ActionsMenu from '../components/ActionsMenu';
 import Avatar from '../components/Avatar';
 import Badge from '../components/Badge';
 import Button from '../components/Button';
-import Card from '../components/Card';
 import DetalleContenido from '../components/DetalleContenido';
 import EditarForm from '../components/EditarForm';
 import EmptyState from '../components/EmptyState';
@@ -180,9 +179,8 @@ export default function PersonasList() {
           </Button>
         }
       />
-      <Card className="mb-4 p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1 basis-64">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1 basis-64">
             <Input
               placeholder="Nombre, apellido o documento (mín. 3 caracteres)"
               value={search}
@@ -210,8 +208,7 @@ export default function PersonasList() {
               Limpiar
             </Button>
           )}
-        </div>
-      </Card>
+      </div>
       {loading ? (
         <TableCardSkeleton headers={HEADERS} rows={10} avatar />
       ) : filas.length === 0 ? (
